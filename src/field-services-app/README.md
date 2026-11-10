@@ -2,7 +2,7 @@
 
 Rayfin app for field operations: managers create and assign work orders, Service Pros accept jobs and mark them complete.
 
-This is the completed reference app from Build26 LAB514, including work-order comments. It is not the pre-comments starter used in the lab exercises and does not yet include the semantic-model dashboard. Rayfin packages use the `experimental` release channel; `npx rayfin` and the npm scripts below use the project's installed experimental CLI.
+This is the completed reference app for Ignite 2026 LAB690, including work-order comments, adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app). It is not the pre-comments starter used in the lab exercises and does not yet include the semantic-model dashboard. Rayfin packages use the `experimental` release channel; `npx rayfin` and the npm scripts below use the project's installed experimental CLI.
 
 ## Profiles
 
@@ -75,6 +75,21 @@ npm run dev
 ```
 
 Deployment is explicit; `npm run dev` only regenerates frontend environment configuration and starts Vite against the selected backend. Docker is not required.
+
+## Update Rayfin packages
+
+The checked-in lockfile resolves all `@microsoft/rayfin-*` packages to `1.37.0-alpha.2159`, the current experimental release at the time of this update. This is newer than the `1.35.1` minimum reported by static hosting. Keep the manifests on `experimental` for now; a separate update to the GA release is still required before the lab is delivered.
+
+From this app directory, refresh the CLI, MCP server, SDK, and local-development plugin together:
+
+```shell
+npm update --workspaces --include-workspace-root @microsoft/rayfin-cli @microsoft/rayfin-mcp @microsoft/rayfin-auth-provider-fabric @microsoft/rayfin-client @microsoft/rayfin-core @microsoft/rayfin-local-dev
+npx rayfin --version
+```
+
+Commit the refreshed root `package-lock.json` with the template. Use `npm ci` when preparing the VM's template copy to install the locked versions. Refresh the separately supplied pre-comments starter as well; updating this completed reference does not update that external template or the Skillable VM image.
+
+## Authentication and local development
 
 Vite's `rayfinLocalDev({ autoLogin: true })` plugin serves runtime configuration and proxies backend requests. In development, the browser installs a brokered session obtained by the plugin through the Rayfin CLI's Microsoft sign-in. Use the intended lab account for `rayfin login`; there is no separate password account for this Fabric-backed flow. The browser-only helper is dynamically imported behind `import.meta.env.DEV` and is excluded from production.
 

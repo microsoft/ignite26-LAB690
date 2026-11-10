@@ -10,11 +10,13 @@ For this lab, use the same signed-in account to switch between both demonstratio
 2. Run:
 
     ```shell
-    npx @microsoft/rayfin@experimental up
+    npx rayfin up
     ```
 
 3. Follow the sign-in prompts for Microsoft Fabric using your lab account. The CLI provisions the backend services configured by the project, applies the data schema, and generates the frontend configuration in `packages/frontend/.env.local`.
 4. Wait for the command to finish and note the deployment details it reports. Keep generated environment files and deployment settings private; do not commit credentials or keys.
+
+`npx rayfin` uses the project's installed experimental CLI. Check it with `npx rayfin --version`. If deployment reports that static hosting requires CLI version `1.35.1` or later, update the template's Rayfin dependencies together using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), then retry. Updating a global CLI alone does not update the project's installed version.
 
 ## Task 2: Start the frontend
 

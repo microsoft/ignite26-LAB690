@@ -22,6 +22,7 @@ For self-paced learning, prepare:
 | Requirement | Purpose |
 | --- | --- |
 | Node.js 24 and npm | Run the app tooling and Rayfin CLI. |
+| Current stable PowerShell 7 on Windows | Run the lab commands in `pwsh`, rather than the older Windows PowerShell. |
 | Git | Clone the lab and commit the generated app before making changes. |
 | Visual Studio Code | Edit the app and review Copilot's changes. |
 | GitHub Copilot CLI and an account with access | Complete the agent-assisted exercises. |
@@ -29,6 +30,8 @@ For self-paced learning, prepare:
 | A Fabric workspace on supported Fabric capacity | Host the app, SQL Database, and semantic model. |
 
 Use the official installation instructions for [Node.js](https://nodejs.org/en/download), [Git](https://git-scm.com/downloads), [Visual Studio Code](https://code.visualstudio.com/download), and [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/use-copilot-agents/use-copilot-in-the-cli).
+
+On Windows, install or update [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) and open a fresh PowerShell 7 terminal. Update npm to the current release supported by Node.js 24 using the [npm update instructions](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm). In the guided environment, these updates should already be included in the VM image; contact the instructor if they are missing.
 
 You need Contributor, Member, or Admin permissions in the workspace. Arrange capacity and tenant settings with your Fabric administrator before starting. Creating or using cloud resources may incur costs; do not assume that a trial or your personal account provides all required capabilities.
 
@@ -67,6 +70,8 @@ copilot --version
 
 Confirm that Node.js reports version 24 and the other commands report installed versions. If `code` is not available in the terminal, open Visual Studio Code from the Start menu and use **File > Open Folder**.
 
+On Windows, also run `pwsh --version` and confirm that it reports the current stable PowerShell 7 release. Use that shell for the remaining exercises.
+
 Verify Git has a commit identity:
 
 ```shell
@@ -97,12 +102,14 @@ Prepare and rehearse the following before attendees start:
 
 | Area | Required preparation |
 | --- | --- |
-| VM image | Install Node.js 24, npm, Git, Visual Studio Code, and Copilot CLI; make command-line tools available in a fresh terminal. |
+| VM image | Install Node.js 24, the current npm release supported by Node.js 24, current stable PowerShell 7, Git, Visual Studio Code, and Copilot CLI. Update the image rather than relying on attendee upgrades; verify `node --version`, `npm --version`, and `pwsh --version` in a fresh PowerShell 7 terminal. |
 | GitHub access | Assign lab accounts with working Copilot access and supply the correct sign-in flow. Verify CLI authorization is permitted. |
 | Microsoft access | Assign lab Microsoft accounts and supply the tenant-specific sign-in flow, including any required MFA steps. |
 | Fabric workspaces | Pre-provision the assigned workspaces, attach supported capacity, and grant the lab accounts the required workspace role. |
 | Tenant configuration | Enable Fabric Apps and Semantic Model Execute Queries for the lab accounts. Confirm that the intended semantic-model workflow and Build/Read permissions work. |
-| Starter files | Make the pre-comments Field Services starter available and document its exact path in Exercise 2. The imported completed reference is not a substitute for this starter. |
+| Starter files | Make the pre-comments Field Services starter available and document its exact path in Exercise 2. Refresh all of its Rayfin packages together on the experimental channel using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify the installed CLI meets the static-hosting minimum of `1.35.1`. The imported completed reference is not a substitute for this starter. |
+| Skillable instructions | Use LAB690 for the current lab identity. Preserve original-source attribution links, but remove stale lab identifiers from attendee instructions and platform configuration. |
+| Knowledge checks | Rehearse every knowledge check in Skillable with an attendee account and confirm that the intended correct answers validate. The platform questions, answer keys, and validation rules are not stored in this repository and must be corrected in Skillable. |
 | Connectivity | Allow the VM to reach GitHub/Copilot, npm, Microsoft sign-in, Fabric, and the generated Rayfin app endpoints. Verify with the actual lab network policy. |
 | Git identity | Configure a suitable commit identity for each lab account so the initial commit succeeds without attendee troubleshooting. |
 | Rehearsal | Use a representative attendee account to bootstrap, deploy, sign in, create data, and query the semantic model through the deployed connector. Administrator access alone is not a sufficient check. |

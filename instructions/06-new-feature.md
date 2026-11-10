@@ -42,14 +42,14 @@ Before updating the backend, inspect the changed files in Visual Studio Code's S
 2. Review any schema changes before applying them. If they are appropriate, run:
 
     ```shell
-    npx @microsoft/rayfin@experimental up db apply
+    npx rayfin up db apply
     ```
 
 3. If the command reports destructive changes, stop and review them before continuing.
 4. Redeploy the updated app:
 
     ```shell
-    npx @microsoft/rayfin@experimental up
+    npx rayfin up
     ```
 
 ## Task 6: Validate the comments workflow
