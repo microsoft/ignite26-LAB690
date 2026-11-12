@@ -1,0 +1,35 @@
+{
+  "name": "field-services-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "npm run dev:frontend",
+    "predev:frontend": "rayfin env --framework vite",
+    "dev:frontend": "npm run dev --workspace @field-services/frontend",
+    "dev:fabric": "npm run dev:frontend",
+    "build": "npm run build --workspace @field-services/shared && npm run build --workspace @field-services/data && npm run build --workspace @field-services/frontend",
+    "build:fabric": "npm run build",
+    "typecheck": "tsc -b",
+    "test": "npm run test --workspace @field-services/frontend",
+    "seed:generate": "node scripts/generate-field-service-seed.mjs",
+    "seed:validate": "node scripts/generate-field-service-seed.mjs --validate",
+    "rayfin:up": "rayfin up",
+    "rayfin:dev": "rayfin dev",
+    "rayfin:db": "rayfin dev db apply"
+  },
+  "template": {
+    "name": "field-services-app",
+    "displayName": "Field Services app",
+    "description": "Field Services application with authentication, data persistence and Rayfin integration."
+  },
+  "devDependencies": {
+    "@microsoft/rayfin-cli": "experimental",
+    "@microsoft/rayfin-mcp": "experimental",
+    "typescript": "^5.8.3"
+  }
+}

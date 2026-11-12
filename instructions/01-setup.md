@@ -37,7 +37,7 @@ You need Contributor, Member, or Admin permissions in the workspace. Arrange cap
 
 The Fabric Apps workload and the Semantic Model Execute Queries REST API tenant setting must be enabled. The account using the dashboard needs Build and Read permissions on the semantic model hosted on Fabric or Power BI capacity. See the [semantic model connector prerequisites](https://learn.microsoft.com/en-us/fabric/apps/data-apps-template#prerequisites).
 
-Clone this repository and open it in Visual Studio Code. Exercise 2 creates a separate app project; the included `src/field-services-app/` is a completed reference with comments already implemented, not the pre-comments starter.
+Clone this repository and open it in Visual Studio Code. Exercise 2 creates a separate app project; the included `src/field-services-app/` is a completed reference with comments already implemented. The pre-comments starter used in Exercise 2 is `template/field-services-app/`.
 
 ## Sign in to GitHub and Copilot CLI
 
@@ -107,7 +107,7 @@ Prepare and rehearse the following before attendees start:
 | Microsoft access | Assign lab Microsoft accounts and supply the tenant-specific sign-in flow, including any required MFA steps. |
 | Fabric workspaces | Pre-provision the assigned workspaces, attach supported capacity, and grant the lab accounts the required workspace role. |
 | Tenant configuration | Enable Fabric Apps and Semantic Model Execute Queries for the lab accounts. Confirm that the intended semantic-model workflow and Build/Read permissions work. |
-| Starter files | Make the pre-comments Field Services starter available and document its exact path in Exercise 2. Refresh all of its Rayfin packages together on the experimental channel using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify the installed CLI meets the static-hosting minimum of `1.35.1`. The imported completed reference is not a substitute for this starter. |
+| Starter files | Install the pre-comments starter from `template/field-services-app/` to `C:\LabFiles\template\field-services-app` with the [VM update script](../scripts/README.md). Refresh all of its Rayfin packages together on the experimental channel using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify the installed CLI meets the static-hosting minimum of `1.35.1`. The imported completed reference is not a substitute for this starter. |
 | Skillable instructions | Use LAB690 for the current lab identity. Preserve original-source attribution links, but remove stale lab identifiers from attendee instructions and platform configuration. |
 | Knowledge checks | Rehearse every knowledge check in Skillable with an attendee account and confirm that the intended correct answers validate. The platform questions, answer keys, and validation rules are not stored in this repository and must be corrected in Skillable. |
 | Connectivity | Allow the VM to reach GitHub/Copilot, npm, Microsoft sign-in, Fabric, and the generated Rayfin app endpoints. Verify with the actual lab network policy. |

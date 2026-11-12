@@ -28,7 +28,7 @@ const LAB_ROOT = 'C:\\LabFiles';
 const GROUPS = [
   {
     name: 'App template',
-    source: 'src/field-services-app',
+    source: 'template/field-services-app',
     target: 'template/field-services-app',
     required: ['package.json', 'package-lock.json', 'rayfin-template.yml'],
   },

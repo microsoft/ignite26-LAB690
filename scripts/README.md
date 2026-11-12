@@ -8,7 +8,7 @@ Files are installed under `C:\LabFiles`.
 
 | Step | Source | Result on the VM |
 | --- | --- | --- |
-| App template | `src/field-services-app` | Replaces `C:\LabFiles\template\field-services-app`. Files not in the repo are deleted. |
+| App template | `template/field-services-app` | Replaces `C:\LabFiles\template\field-services-app`. Files not in the repo are deleted. |
 | npm (latest) | npm registry | Updates the global npm to the latest version. Node.js isn't changed, so the update fails if the installed Node.js is too old for the latest npm. |
 | Rayfin CLI cache | Template `package-lock.json` | Runs `npx -y @microsoft/rayfin-cli@<version> --version` with the CLI version pinned in the template's lockfile, so bootstrap reuses the npm cache. |
 | Version stamp | Build info | Writes `C:\LabFiles\lab-files.json` with the commit the files came from. |

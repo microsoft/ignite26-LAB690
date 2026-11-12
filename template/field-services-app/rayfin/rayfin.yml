@@ -1,0 +1,36 @@
+id: field-services-app
+name: field-services-app
+version: 1.0.0
+services:
+  auth:
+    enabled: true
+    customClaims:
+      app_version: 1.0.0
+    scopes:
+      - read:data
+      - write:data
+    password:
+      enabled: true
+    allowedRedirectUris:
+      - http://localhost:5173
+      - http://localhost:5173/auth/callback
+      - http://127.0.0.1:5173
+    fabric:
+      enabled: true
+      externalEntraExchange: true
+  data:
+    enabled: true
+    dialect: mssql
+    path: packages/data
+    buildCommand: npm run build
+  storage:
+    enabled: false
+  staticHosting:
+    enabled: true
+    path: packages/frontend
+    folder: dist
+    buildCommand: npm run build:fabric
+    indexDocument: index.html
+    assetAccess: protected
+  functions:
+    enabled: false

@@ -2,7 +2,7 @@
 
 Rayfin app for field operations: managers create and assign work orders, Service Pros accept jobs and mark them complete.
 
-This is the completed reference app for Ignite 2026 LAB690, including work-order comments, adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app). It is not the pre-comments starter used in the lab exercises and does not yet include the semantic-model dashboard. Rayfin packages use the `experimental` release channel; `npx rayfin` and the npm scripts below use the project's installed experimental CLI.
+This is the completed reference app for Ignite 2026 LAB690, including work-order comments, adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app). It is not the pre-comments starter used in the lab exercises, which lives in [`template/field-services-app`](../../template/field-services-app/), and does not yet include the semantic-model dashboard. Rayfin packages use the `experimental` release channel; `npx rayfin` and the npm scripts below use the project's installed experimental CLI.
 
 ## Profiles
 
@@ -87,7 +87,7 @@ npm update --workspaces --include-workspace-root @microsoft/rayfin-cli @microsof
 npx rayfin --version
 ```
 
-Commit the refreshed root `package-lock.json` with the template. Use `npm ci` when preparing the VM's template copy to install the locked versions. Refresh the separately supplied pre-comments starter as well; updating this completed reference does not update that external template or the Skillable VM image.
+Commit the refreshed root `package-lock.json` with the template. Use `npm ci` when preparing the VM's template copy to install the locked versions. Apply the same update to the pre-comments starter in [`template/field-services-app`](../../template/field-services-app/), then republish the VM update (see [`scripts/README.md`](../../scripts/README.md)); updating this completed reference alone does not update the starter or the Skillable VM.
 
 ## Authentication and local development
 

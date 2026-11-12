@@ -1,6 +1,6 @@
 # Source
 
-[`field-services-app/`](field-services-app/) contains the completed Field Services reference app for Ignite 2026 LAB690, adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app).
+[`field-services-app/`](field-services-app/) contains the completed Field Services reference app for Ignite 2026 LAB690 (the end state of the lab). The lab starter, without work-order comments, is in [`../template/field-services-app/`](../template/field-services-app/). Both are adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app).
 
 The app includes the comments feature, so it is a completed reference rather than the pre-comments starter required by Exercise 6. It does not yet include the semantic-model dashboard described in Exercise 8.
 
