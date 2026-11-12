@@ -4,7 +4,7 @@ Build a Microsoft Fabric semantic model over the work-order data, then use Rayfi
 
 ## Task 1: Build a semantic model
 
-1. In the Fabric portal, open the workspace created for this lab.
+1. In the Fabric portal, open the workspace that was created for this lab by `rayfin up` in Exercise 4.
 2. Create a semantic model using the deployed SQL Database as its data source.
 3. Include the service-pro, work-order, and comments tables available in your database.
 4. Define relationships between service pros and work orders using the service-pro identifier, and between work orders and comments using the work-order identifier.
@@ -24,7 +24,7 @@ Suggested descriptions:
 2. Add a connector named `fieldservicesmodel`, replacing the identifiers with the values from Task 1:
 
     ```shell
-    npx @microsoft/rayfin@experimental connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
+    npx rayfin connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
     ```
 
 3. Run the version-matched package installation command printed by the experimental CLI. Keep the connector and SDK packages on the matching experimental release; do not substitute `@latest` or stable versions.
@@ -33,7 +33,7 @@ Suggested descriptions:
 6. Inspect the model before writing queries:
 
     ```shell
-    npx @microsoft/rayfin@experimental connector inspect --name fieldservicesmodel
+    npx rayfin connector inspect --name fieldservicesmodel
     ```
 
 Use the actual table, column, and measure names from your model, including any renames made in Task 1. See the [Rayfin Semantic Model connector documentation](https://rayfin.ai/docs/connectors/semantic-models) for configuration and client wiring.
@@ -67,7 +67,7 @@ Use the actual table, column, and measure names from your model, including any r
 1. Exit Copilot CLI with `/exit`, then deploy the connector configuration and dashboard:
 
     ```shell
-    npx @microsoft/rayfin@experimental up
+    npx rayfin up
     ```
 
 2. Start the local frontend with `npm run dev`, sign in, and open the dashboard from the manager view.

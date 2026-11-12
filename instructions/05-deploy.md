@@ -11,9 +11,9 @@ The `npx rayfin up` command uses the project's installed experimental CLI to pro
 
 ## Task 2: Inspect the Fabric deployment
 
-1. Open [Microsoft Fabric](https://app.fabric.microsoft.com) and select the workspace you created for this lab.
+1. Open [Microsoft Fabric](https://app.fabric.microsoft.com) and select the workspace that `rayfin up` created for the app in Exercise 4. Its name resembles `field-services-app-123456`.
 2. Confirm that the deployment created a Fabric app and a SQL Database item.
-3. Open the database and inspect the service-pro and work-order tables.
+3. Open the database, expand **dbo > Tables**, and inspect the **ServicePros** and **WorkOrders** tables.
 
 The local and hosted frontends should use the same deployed backend. Follow your organization's guidance for keeping or removing the resources after the lab.
 

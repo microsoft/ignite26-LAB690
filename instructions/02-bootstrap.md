@@ -5,10 +5,10 @@ In this exercise, create a Rayfin project from the Field Services template and m
 ## Task 1: Create the Rayfin project
 
 1. Open a terminal in the directory where you want the project.
-2. Run the Rayfin create command with the Field Services template and your Fabric workspace URL. Replace `<template-path>` with the template path supplied for the lab and `<workspace-uri>` with the URL you copied in Exercise 1:
+2. Run the Rayfin create command with the Field Services template. Replace `<template-path>` with the template path supplied for the lab (`C:/LabFiles/template/field-services-app` in the guided VM, or `template/field-services-app` in this repository for self-paced learning):
 
     ```shell
-    npm create -y @microsoft/rayfin@experimental -- --project-name field-services-app --template "<template-path>" --workspace-uri "<workspace-uri>"
+    npm create -y @microsoft/rayfin@experimental -- --project-name field-services-app --template "<template-path>"
     ```
 
 3. Wait for the CLI to create the project and install its dependencies.

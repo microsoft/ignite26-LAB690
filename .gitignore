@@ -430,3 +430,4 @@ FodyWeavers.xsd
 
 # Lab VM update build output
 /scripts/dist/
+.DS_Store

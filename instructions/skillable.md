@@ -100,20 +100,6 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
     > [!Important]
     > If the page title and icon in the bottom left corner of the page say "Power BI", you need to switch to the Fabric portal. Click on the **Power BI** icon in the bottom left corner, then select **Fabric** to switch to the Microsoft Fabric portal.
 
-## Task 4: Create a Workspace in Fabric
-
-This lab deploys your work-order app to a Microsoft Fabric workspace.
-
-A workspace is a container for all the Fabric items related to your project, such as databases, notebooks, and deployed applications.
-
-1. In the Fabric portal, select **Workspaces** from the left-hand navigation pane. Then select **+ New workspace**.
-
-1. Name the workspace `LAB690-workorders-@lab.LabInstance.Id`.
-
-1. Expand the **Advanced** section and scroll to the **Workspace type** setting and ensure that **Fabric** is selected.
-
-1. Select **Apply** to create the workspace.
-
 ---
 
 ## Verify Your Setup
@@ -146,19 +132,11 @@ The template handles the setup for you, so you can focus on the lab.
 
 ## Task 1: Bootstrap a new Rayfin project from the Field Services template
 
-1. From the open Windows Terminal, type/add the following command, but **do not press *Enter* yet**. Leave `<workspace-uri>` in place for now.
+1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template.
 
     ```shell
-    npm create -y @microsoft/rayfin@experimental -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace-uri <workspace-uri>
+    npm create -y @microsoft/rayfin@experimental -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app"
     ```
-
-1. Navigate back to your browser where you have the Microsoft Fabric portal open.
-
-1. In the left-hand navigation pane, select **Workspaces** and then select the **LAB690-workorders-@lab.LabInstance.Id** workspace you created in Task 4 of the previous exercise.
-
-1. Once the workspace loads, copy the URL from the browser address bar. Remove anything after the workspace ID. The URL should look like `https://app.fabric.microsoft.com/groups/<workspace-id>`
-
-1. Return to the terminal. In the command you pasted, replace `<workspace-uri>` with the Fabric workspace URL you just copied, then press **Enter** to bootstrap a new Rayfin project from the Field Services template.
 
     The CLI will then:
     - Create a new folder called **field-services-app** in your current directory.
@@ -366,7 +344,9 @@ The **rayfin up** command provisions a managed backend (database, auth, data API
     ```
 
     > [!IMPORTANT]
-    > Rayfin tool may report an error like **Login failed: OS keychain is not available and plaintext token storage is not enabled.** because of the VM environment. If you run into this, run `$env:RAYFIN_PLAIN_TEXT_TOKEN_STORAGE = "1"` in the terminal to enable plaintext token storage for the current session, then retry the command.
+    > Rayfin tool may report an error like **Login failed: OS keychain is not available and plaintext token storage is not enabled.** because of the VM environment. If you run into this, run `$env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"` in the terminal to enable plaintext token storage for the current session, then retry the command.
+
+1. When asked to choose a Fabric workspace for the deployment, select **Use new workspace**, then validate the capacity.
 
 1. As this is your first time deploying, the CLI will:
 
@@ -498,11 +478,11 @@ Let's take a look at the deployed app and database in the Microsoft Fabric porta
 
 1. Open the Microsoft Fabric portal at `https://app.fabric.microsoft.com`.
 
-1. Open the **LAB690-workorders-@lab.LabInstance.Id** workspace you created in Exercise 1.
+1. Find the workspace created for the Field Services app deployment in Exercise 4 and open it, should be named something like **field-services-app-123456**.
 
-1. Confirm that the workspace contains a **Fabric data app** item and a **SQL Database** item. The **ServicePro** and **WorkOrder** tables are stored in the SQL Database item.
+1. Confirm that the workspace contains a **Fabric data app** item and a **SQL Database** item. The **ServicePros** and **WorkOrders** tables are stored in the SQL Database item.
 
-1. Select the Fabric SQL Database item to open it, and in the left explorer, expand the **field-services-app** database and then expand **dbo > Tables** to see the **ServicePro** and **WorkOrder** tables.
+1. Select the Fabric SQL Database item to open it, and in the left explorer, expand the **field-services-app** database and then expand **dbo > Tables** to see the **ServicePros** and **WorkOrders** tables.
 
 1. Select each table to see the data contained within it.
 
@@ -775,7 +755,7 @@ By completing this exercise, you will:
 
 A semantic model gives a clean, well-described view of your data - including table relationships, friendly column names, and descriptions - that apps and tools can query consistently.
 
-1. Navigate to the Microsoft Fabric portal and open the workspace you created for this lab.
+1. Navigate to the Microsoft Fabric portal and open the workspace that was created for this lab.
 
 1. Select **+ New item** from the top menu and in the dialog, search and select **Semantic model**.
 
@@ -842,7 +822,7 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 1. Add a connector named **fieldservicesmodel**. Replace `<workspace-id>` and `<semantic-model-item-id>` with the values you recorded in Task 1:
 
     ```shell
-    npx @microsoft/rayfin@experimental connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
+    npx rayfin connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
     ```
 
 1. Run the version-matched package installation command printed by the CLI.
@@ -857,7 +837,7 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 1. Inspect the model before writing any queries:
 
     ```shell
-    npx @microsoft/rayfin@experimental connector inspect --name fieldservicesmodel
+    npx rayfin connector inspect --name fieldservicesmodel
     ```
 
     Note the actual table, column, and measure names, including the columns you renamed in Task 1.

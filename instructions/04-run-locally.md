@@ -13,8 +13,12 @@ For this lab, use the same signed-in account to switch between both demonstratio
     npx rayfin up
     ```
 
-3. Follow the sign-in prompts for Microsoft Fabric using your lab account. The CLI provisions the backend services configured by the project, applies the data schema, and generates the frontend configuration in `packages/frontend/.env.local`.
-4. Wait for the command to finish and note the deployment details it reports. Keep generated environment files and deployment settings private; do not commit credentials or keys.
+    > [!IMPORTANT]
+    > On some VMs, Rayfin reports **Login failed: OS keychain is not available and plaintext token storage is not enabled.** If you see this error, run `$env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"` in the same PowerShell terminal to allow plaintext token storage for the current session, then retry the command.
+
+3. When asked to choose a Fabric workspace for the deployment, select **Use new workspace**, then validate the capacity.
+4. Follow the sign-in prompts for Microsoft Fabric using your lab account. The CLI creates the workspace, provisions the backend services configured by the project, applies the data schema, and generates the frontend configuration in `packages/frontend/.env.local`.
+5. Wait for the command to finish and note the deployment details it reports. Keep generated environment files and deployment settings private; do not commit credentials or keys.
 
 `npx rayfin` uses the project's installed experimental CLI. Check it with `npx rayfin --version`. If deployment reports that static hosting requires CLI version `1.35.1` or later, update the template's Rayfin dependencies together using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), then retry. Updating a global CLI alone does not update the project's installed version.
 
