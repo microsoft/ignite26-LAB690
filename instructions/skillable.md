@@ -29,7 +29,7 @@ Through the exercises, you'll explore how Contoso DIY:
 - Bootstraps a production-ready field-services app from a template and uses Fabric Apps and Rayfin SDK to model service pros, work orders, authentication, data, and hosting declaratively
 - Provisions a managed Fabric backend with a SQL database, authentication, and static hosting with a single command and no cloud configuration
 - Uses GitHub Copilot CLI and the Rayfin agent skill to add features across the schema and user interface, applying schema changes locally and in production without hand-writing migrations
-- Seeds the deployed app with realistic data and uses Microsoft Fabric intelligence, semantic models, and data agents to ask natural-language questions about operational data
+- Seeds the deployed app with realistic data, builds a Microsoft Fabric semantic model over it, and uses the Rayfin Semantic Model connector to bring insights back into an in-app dashboard
 
 You'll walk in the Contoso DIY team's shoes to build, ship, evolve, and analyze a real enterprise app. The exercises are designed to be completed in order because each step builds on the app, data model, deployment, and resources created in the previous exercises, so make sure you complete each exercise before moving on to the next one.
 
@@ -45,6 +45,8 @@ This lab uses a pre-configured virtual machine with all necessary tools installe
 
 - Node.js 24
 - npm
+- PowerShell 7
+- Git
 - Visual Studio Code
 - GitHub Copilot CLI
 
@@ -106,7 +108,7 @@ A workspace is a container for all the Fabric items related to your project, suc
 
 1. In the Fabric portal, select **Workspaces** from the left-hand navigation pane. Then select **+ New workspace**.
 
-1. Name the workspace `Lab514-workorders-@lab.LabInstance.Id`.
+1. Name the workspace `LAB690-workorders-@lab.LabInstance.Id`.
 
 1. Expand the **Advanced** section and scroll to the **Workspace type** setting and ensure that **Fabric** is selected.
 
@@ -121,8 +123,14 @@ Navigate back to the Windows Terminal and run the following commands to verify t
 ```shell
 node --version
 npm --version
+git --version
 copilot --version
 ```
+
+Confirm that Node.js reports version 24 and the other commands report installed versions.
+
+> [!Note]
+> This lab uses the Rayfin **experimental** release channel. The create command in Exercise 2 downloads it, so you don't need a global Rayfin installation.
 
 Select **Next →** to start the second exercise.
 
@@ -141,12 +149,12 @@ The template handles the setup for you, so you can focus on the lab.
 1. From the open Windows Terminal, type/add the following command, but **do not press *Enter* yet**. Leave `<workspace-uri>` in place for now.
 
     ```shell
-    npm create -y @microsoft/rayfin@latest -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace-uri <workspace-uri>
+    npm create -y @microsoft/rayfin@experimental -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace-uri <workspace-uri>
     ```
 
 1. Navigate back to your browser where you have the Microsoft Fabric portal open.
 
-1. In the left-hand navigation pane, select **Workspaces** and then select the **Lab514-workorders-@lab.LabInstance.Id** workspace you created in Task 5 of the previous exercise.
+1. In the left-hand navigation pane, select **Workspaces** and then select the **LAB690-workorders-@lab.LabInstance.Id** workspace you created in Task 4 of the previous exercise.
 
 1. Once the workspace loads, copy the URL from the browser address bar. Remove anything after the workspace ID. The URL should look like `https://app.fabric.microsoft.com/groups/<workspace-id>`
 
@@ -157,6 +165,9 @@ The template handles the setup for you, so you can focus on the lab.
     - Copy the template files into a new **field-services-app** folder.
     - Wire the project to your Fabric workspace using the `--workspace-uri` you provided.
     - Run `npm install` in the new project folder to pull dependencies (this can take a couple of minutes on first run).
+
+    > [!Note]
+    > This lab uses Rayfin's **experimental** release channel. Use `@experimental` for project creation and Rayfin package additions, and keep Rayfin packages version-matched. Inside the generated project, use `npx rayfin` to run the installed CLI.
 
 1. While the install is running, open the **data** folder at **C:\LabFiles\template\field-services-app** to see the original prompt and dataset used to generate this template. This will give you a better understanding of how the app was built and ideas on how to customize it later in the lab.
 
@@ -178,10 +189,12 @@ In this task, you will inspect the generated project, initialize a Git repositor
 
 1. Review the project structure. It should look something like this:
 
-    - **src/**: React + TypeScript frontend
-    - **rayfin/**: Rayfin backend configuration (*rayfin.yml*, data entities)
+    - **packages/data/**: Rayfin data model (entity classes and schema)
+    - **packages/shared/**: Browser-safe record contracts shared by the frontend
+    - **packages/frontend/**: React + TypeScript frontend
+    - **rayfin/**: Rayfin backend configuration (*rayfin.yml*)
     - **data/**: Seed data and **the original prompt + dataset used to generate this template** (worth a look if you're curious how it was built)
-    - **package.json**: Dependencies and scripts for the project, including **build** and **dev**.
+    - **package.json**: Declares the npm workspaces and root scripts such as **build** and **dev**.
 
 1. Open the terminal in Visual Studio Code by right-clicking in an empty space of the editor area's tabs bar and select **New Terminal** to open a terminal pane. Alternatively, you can select **View > Terminal** from the top menu.
 
@@ -230,13 +243,14 @@ You will look at:
     | Folder / file | Why it matters |
     | --- | --- |
     | **rayfin/rayfin.yml** | Turns Rayfin managed services on or off. |
-    | **rayfin/data/** | Defines the backend data model. |
-    | **src/** | Contains the React + TypeScript frontend. |
-    | **src/services/** | Connects the frontend to Rayfin auth and data. |
-    | **src/pages/** | Contains the main app pages. |
-    | **src/components/ui/** | Contains reusable UI components. |
+    | **packages/data/src/** | Defines and registers the backend data model. |
+    | **packages/shared/src/** | Contains browser-safe record contracts and the typed client schema. |
+    | **packages/frontend/src/** | Contains the React + TypeScript frontend. |
+    | **packages/frontend/src/services/** | Connects the frontend to Rayfin auth and data. |
+    | **packages/frontend/src/pages/** | Contains the main app pages. |
+    | **packages/frontend/vite.config.ts** | Configures Vite and the integrated local-development auth plugin. |
     | **data/** | Contains the original app spec and seed dataset. |
-    | **package.json** | Lists scripts such as *dev*, *rayfin:dev*, *rayfin:db*, *dev:fabric*, *build*, and *test*. |
+    | **package.json** | Declares the npm workspaces and root scripts such as *dev*, *build*, and *test*. Each package owns its dependencies. |
     | **AGENTS.md** | Gives guidance for AI coding agents. |
 
     We will review the Rayfin configuration and data model in more detail in the next tasks, review the rest of the files lightly for now.
@@ -258,15 +272,15 @@ The **rayfin/rayfin.yml** file tells Rayfin which services this app uses.
     | **auth** | Two providers are enabled: **password** (used for local development) and **fabric** (Microsoft Entra SSO, used when deployed to Microsoft Fabric). |
     | **data** | Creates a managed SQL database for the app. |
     | **storage** | Is turned off in this template, but can be enabled for blob storage. |
-    | **staticHosting** | Hosts the built frontend from *dist/* after deployment. |
+    | **staticHosting** | Hosts the built frontend from *packages/frontend/dist/* after deployment. |
 
 1. Do not edit this file yet. For now, just learn where the settings live.
 
 ## Task 3: Explore the Data Model
 
-The **rayfin/data/** folder defines the database tables for this app.
+The **packages/data/src/** folder defines the database tables for this app.
 
-1. Open **rayfin/data/**.
+1. Open **packages/data/src/**.
 
 1. You should see these files:
 
@@ -294,21 +308,23 @@ The **rayfin/data/** folder defines the database tables for this app.
 
 1. Remember this rule: these TypeScript entity classes are the source of truth for the database schema.
 
+1. Open **packages/shared/src/index.ts**. These record contracts keep frontend data access typed without importing the decorated backend classes into the browser. Keep them aligned when you change an entity.
+
 ## Task 4 (Optional): Explore the Frontend Code
 
 You do not need to understand the full frontend in this exercise.
 
-1. Open **src/**.
+1. Open **packages/frontend/src/**.
 
 1. If you have time, look at these files:
 
-    - **services/ServiceContainer.ts**: singleton that bootstraps the Rayfin client and auto-selects the right auth provider (password locally, Fabric Entra in production).
+    - **services/ServiceContainer.ts**: singleton that bootstraps the Rayfin client and selects the right auth provider for the environment.
     - **services/rayfin/RayfinFieldService.ts**: CRUD operations for *ServicePro* and *WorkOrder* using the typed Rayfin data API.
 
 1. Keep these ideas in mind:
 
     - The frontend uses types generated from the Rayfin schema.
-    - If you change a field in **rayfin/data/**, TypeScript can help find frontend code that needs updating.
+    - If you change a field in **packages/data/src/**, TypeScript can help find frontend code that needs updating.
     - The app does not use a hand-written REST client.
 
 ---
@@ -331,7 +347,11 @@ You will:
 
 - **Provision a Fabric backend** for the app with one command
 - Start the **frontend dev server** locally
+
 Then you will sign in, create a Service Pro profile, complete a work order, and test the manager view.
+
+> [!Note]
+> In this lab, you use the same signed-in account to switch between the Service Pro and manager views. Switching views is not an authorization boundary. In a production app, roles would be assigned to authenticated identities and enforced server-side rather than selected by the user.
 
 ## Task 1: Provision the Fabric backend
 
@@ -345,6 +365,9 @@ The **rayfin up** command provisions a managed backend (database, auth, data API
     npx rayfin up
     ```
 
+    > [!IMPORTANT]
+    > Rayfin tool may report an error like **Login failed: OS keychain is not available and plaintext token storage is not enabled.** because of the VM environment. If you run into this, run `$env:RAYFIN_PLAIN_TEXT_TOKEN_STORAGE = "1"` in the terminal to enable plaintext token storage for the current session, then retry the command.
+
 1. As this is your first time deploying, the CLI will:
 
     - Open a browser to sign you in to Microsoft Entra. Authentication will be automatic since you already have an active SSO session from Exercise 1.
@@ -352,14 +375,17 @@ The **rayfin up** command provisions a managed backend (database, auth, data API
     - **Provision a managed SQL database** for your data model.
     - **Apply your schema** to that database.
     - **Generate a publishable key** for the new backend.
-    - **Wire your frontend** to the new backend by writing the connection details and key into *.env.local* and *rayfin/.env*.
+    - **Wire your frontend** to the new backend by writing the connection details and key into *packages/frontend/.env.local*.
 
 1. Watch the terminal for progress on each step. The first run takes a couple of minutes.
 
 1. When the command finishes, the CLI prints the deployment details, including the backend URL.
 
 > [!TIP]
-> The CLI saves the deployment details to **rayfin/.deployments.json** so subsequent **rayfin up** runs update the same deployment instead of creating a new one.
+> The CLI saves the deployment details to **rayfin/.deployments.json** so subsequent **rayfin up** runs update the same deployment instead of creating a new one. Keep the generated environment files private and don't commit credentials or keys.
+
+> [!Note]
+> `npx rayfin` uses the project's installed experimental CLI. You can check its version with `npx rayfin --version`. If deployment reports that static hosting requires CLI version `1.35.1` or later, ask your lab instructor for help: the template's Rayfin packages must be updated together, and updating a global CLI alone doesn't change the project's version.
 
 ## Task 2: Start the frontend
 
@@ -371,23 +397,27 @@ The frontend is the React app that users interact with.
     npm run dev
     ```
 
-    Because **rayfin up** already wrote the backend URL and publishable key into **.env.local**, Vite picks them up automatically. Your locally-served frontend talks to the freshly provisioned Fabric backend with no extra configuration.
+    Because **rayfin up** already wrote the backend URL and publishable key into **packages/frontend/.env.local**, Vite picks them up automatically. Your locally-served frontend talks to the freshly provisioned Fabric backend with no extra configuration.
 
 1. Copy the local frontend URL shown in the terminal, which should be similar to `http://localhost:5173`, and open it in a new browser tab.
 
-1. Confirm that the app sign-in page opens.
+1. The Vite local-development plugin uses the Rayfin CLI's Microsoft sign-in to establish the app session automatically, so you don't need a separate email and password. If the CLI prompts you to sign in, use the same Microsoft account you used for Fabric:
 
-## Task 3: Sign up as a Service Pro
-
-The authentication page includes a **"Sign in with Microsoft"** button, and the backend uses Microsoft Entra (Fabric SSO) for sign-in.
-
-1. Select the **Sign in with Microsoft** button. Since you already have an active SSO session from Exercise 1, you should be signed in automatically without needing to enter credentials again. Otherwise, sign in with the same Microsoft account you used for Fabric:
     - **Email**: +++@lab.CloudPortalCredential(User1).Username+++
     - **TAP**: +++@lab.CloudPortalCredential(User1).AccessToken+++
 
-1. After successful sign-in, a Microsoft Fabric dialog will pop up asking you to allow the app to use your Microsoft Fabric credentials. Select **Accept** to continue.
+1. Confirm that the app opens.
 
-1. After successful authentication, you should land in the Service Pro First Access view where you can create your profile.
+    > [!Tip]
+    > If automatic sign-in fails, review the error displayed in the app. Check that **rayfin/rayfin.yml** contains `externalEntraExchange: true` under **services > auth > fabric**, and that it was deployed with `npx rayfin up` before retrying.
+
+## Task 3: Sign up as a Service Pro
+
+1. Confirm that you are signed in with your lab account. If the sign-in page is shown instead, select the **Sign in with Microsoft** button to retry.
+
+1. If a Microsoft Fabric dialog pops up asking you to allow the app to use your Microsoft Fabric credentials, select **Accept** to continue.
+
+1. You should land in the Service Pro First Access view where you can create your profile.
 
 1. Create your Service Pro profile by entering your name and relevant skills.
 
@@ -399,7 +429,7 @@ The authentication page includes a **"Sign in with Microsoft"** button, and the 
 
 1. Complete the profile creation by selecting **Create Profile**.
 
-1. After your profile is created, you should see the **Jobs** view with the seeded work order for you to test with.
+1. After your profile is created, you should see the **Jobs** view. If a sample work order is available, use it to test the next steps.
 
 1. Accept the work order by selecting the **Accept job** button on the work order card.
 
@@ -409,11 +439,7 @@ The authentication page includes a **"Sign in with Microsoft"** button, and the 
 
 The same app also includes a manager view.
 
-1. Open a new browser tab and navigate to the manager URL:
-
-    ```text
-    http://localhost:5173/manager/
-    ```
+1. Select **Manager** in the app navigation bar. You can also navigate directly to `/manager/` on the local URL printed by Vite, such as `http://localhost:5173/manager/`.
 
 1. Review the manager view and create a new work order by completing the form and selecting **Create order**.
 
@@ -451,15 +477,15 @@ You will:
     > [!TIP]
     > If you missed the hosting URL, run `npx rayfin up status` from the **field-services-app** folder to print the current deployment details.
 
-1. Open the hosting URL in a new browser tab. The app displays the same auth page as your local frontend, including the **Sign in with Microsoft** button, because both use the same Fabric backend.
+1. Open the hosting URL in a new browser tab. The app shows the same sign-in experience as your local frontend, because both use the same Fabric backend.
 
-1. Select **Sign in with Microsoft** just like you did in Exercise 4.
+1. If the sign-in page is shown, select **Sign in with Microsoft** and accept the Microsoft Fabric credentials prompt if it appears.
 
 1. After authentication completes, confirm that you land in the Service Pro view.
 
 1. Confirm that you can see the same profile and work orders you created in the previous exercise. This verifies that the hosted app is using the same database as the app you tested locally.
 
-1. Navigate to `/manager/` and create a couple of new work orders.
+1. Select **Manager** in the app navigation bar (or append `/manager/` to the hosting URL) and create a couple of new work orders.
 
 At this point, you have verified that the app is live. Any user with access to your Microsoft Fabric workspace can open the hosted app and use the deployed backend.
 
@@ -472,7 +498,7 @@ Let's take a look at the deployed app and database in the Microsoft Fabric porta
 
 1. Open the Microsoft Fabric portal at `https://app.fabric.microsoft.com`.
 
-1. Open the **Lab514-workorders-@lab.LabInstance.Id** workspace you created in Exercise 1.
+1. Open the **LAB690-workorders-@lab.LabInstance.Id** workspace you created in Exercise 1.
 
 1. Confirm that the workspace contains a **Fabric data app** item and a **SQL Database** item. The **ServicePro** and **WorkOrder** tables are stored in the SQL Database item.
 
@@ -525,22 +551,10 @@ Start GitHub Copilot CLI from the app project folder so it can read the project 
 1. Launch GitHub Copilot CLI:
 
     ```shell
-    copilot --yolo
+    copilot
     ```
 
-    > [!Tip]
-    > The `--yolo` option automatically approves tool calls such as file edits and terminal commands. Use it only in a controlled lab workspace that does not contain secrets, production data, or changes you cannot easily revert.
-
-1. In the GitHub Copilot CLI prompt, open the model picker by typing the following command and enter:
-
-    ```text
-    /model
-    ```
-
-1. Select **GPT-5.4** by using the arrow keys and enter, and choose **low** reasoning effort.
-
-    > [!Tip]
-    > The model selection applies to the current GitHub Copilot CLI session. If you exit and start GitHub Copilot CLI again, repeat this step.
+1. Use the model and reasoning settings available for your account. When GitHub Copilot CLI asks to edit files or run commands, review each proposed action before approving it.
 
 ## Task 3: Generate the comments feature
 
@@ -549,21 +563,27 @@ Use GitHub Copilot CLI to generate the comments feature without applying the bac
 1. In the GitHub Copilot CLI prompt, paste the following implementation request:
 
     ```text
-    Implement a comments feature for work orders. Comments should provide a history of interventions so service pros and the manager can communicate and ask questions about a work order. Each comment must include id, userId, createdAt, workOrderId, and content. Keep the comments section collapsed by default in the UI. Only the service pro assigned to the work order and the manager can view and add comments for a work order. Generate the code only; do not apply the backend schema change.
+    Implement a comments feature for work orders. Comments should provide a history of interventions so service pros and the manager can communicate about a work order. Each comment must include an id, userId, createdAt, workOrderId, and content. Keep the comments section collapsed by default. Let the attendee add comments from the assigned service-pro experience and reply from the manager experience using the same signed-in account. These are switchable demonstration views, not independently authorized roles. Preserve authenticated backend access; do not treat the view switch as authorization or add a second account requirement. Generate the code, but do not apply the backend schema change yet.
+
+    Use Rayfin's experimental release channel for any Rayfin commands or package additions. Keep Rayfin dependencies version-matched; do not switch to latest or stable.
     ```
 
-1. Allow GitHub Copilot CLI to plan and apply the code changes.
+1. Review the plan and allow GitHub Copilot CLI to apply the code changes.
 
 1. As the implementation runs, confirm that GitHub Copilot CLI is making changes consistent with the request, including:
 
-    - A new **WorkOrderComment** entity under **rayfin/data/**
-    - An update to **rayfin/data/schema.ts** that exports the new entity
-    - Permission logic that limits comments to the assigned service pro and the manager
+    - A new **WorkOrderComment** entity under **packages/data/src/**
+    - An update to **packages/data/src/schema.ts** that registers the new entity
+    - A matching record contract in **packages/shared/src/index.ts**
+    - Authenticated backend access, with comments available in both the Service Pro and manager views
     - React user interface changes that add a collapsed-by-default **Comments** section to work-order details
     - Typed Rayfin client calls that fetch and create comments
 
     > [!Note]
-    > Your entity could be named **Comment** or **WorkOrderComment** or something similar. The important part is that it includes the required fields and is properly exported from the schema. For purposes of this lab, the instructions will refer to it as **WorkOrderComment**, but the actual name may vary.
+    > Your entity could be named **Comment** or **WorkOrderComment** or something similar. The important part is that it includes the required fields and is properly registered in the schema. For purposes of this lab, the instructions will refer to it as **WorkOrderComment**, but the actual name may vary.
+
+    > [!Note]
+    > The lab deliberately allows one account to try both views. In production, roles would be assigned to authenticated identities and enforced server-side rather than selected by the user.
 
 ## Task 4: Review the generated implementation
 
@@ -575,13 +595,14 @@ Before applying backend changes, review the files generated by GitHub Copilot CL
 
 1. Review each changed file.
 
-1. Confirm that the implementation includes a comment entity, schema registration, permission logic, data access updates, and user interface updates.
+1. Confirm that the implementation includes a comment entity, schema registration, shared contract, data access updates, and user interface updates.
 
 1. If you prefer the terminal, run `git status` or `git diff` from the **field-services-app** folder to inspect the same changes. Expected changes include:
 
-    - A new file under **rayfin/data/**, such as **WorkOrderComment.ts**
-    - An update to **rayfin/data/schema.ts**
-    - New or updated files under **src/components/**, **src/pages/**, **src/hooks/**, or **src/services/**
+    - A new file under **packages/data/src/**, such as **WorkOrderComment.ts**
+    - An update to **packages/data/src/schema.ts**
+    - An update to **packages/shared/src/index.ts**
+    - New or updated files under **packages/frontend/src/components/**, **packages/frontend/src/pages/**, **packages/frontend/src/hooks/**, or **packages/frontend/src/services/**
     - A comments user interface that is collapsed by default
 
 > [!Note]
@@ -633,13 +654,15 @@ Test the comments feature from both the local development app and the hosted app
 
 1. Add a comment to the work order.
 
-1. Navigate to the manager view at `/manager/`.
+1. Select **Manager** in the app navigation bar.
 
-1. Open the same work order and confirm that the manager can see the comment thread.
+1. Open the same work order and confirm that you can see the comment thread using the same signed-in account.
 
 1. Add a reply from the manager view.
 
-1. Return to the Service Pro view and confirm that the reply appears in the same thread.
+1. Select **Jobs** and confirm that the reply appears in the same thread.
+
+1. Reload the page and expand the **Comments** section again to confirm that the comments persist.
 
 1. Open the live hosting URL from Exercise 5 and repeat a quick smoke test to confirm that the deployed app also includes the comments feature.
 
@@ -658,10 +681,10 @@ This error appears when I post a comment: <paste the error message>. Please fix 
 ```
 
 ```text
-The manager cannot see comments on assigned work orders. Please review the permissions and fix the issue.
+The manager view cannot see comments on assigned work orders. Please review the data access and fix the issue.
 ```
 
-After GitHub Copilot CLI applies a fix, repeat the relevant validation steps from Task 5 and Task 6.
+After GitHub Copilot CLI applies a fix, review the proposed changes, then repeat the relevant validation steps from Task 5 and Task 6.
 
 You have completed the feature implementation and validation workflow for the Field Services app.
 
@@ -683,38 +706,41 @@ By completing this exercise, you will:
 
 ## Task 1: Open the admin page and seed the database
 
-The template includes an authenticated admin page at `/_admin/` that can generate a larger dataset from **src/data/field-service-seed.json**.
+The template includes an authenticated admin page at `/_admin/` that can restore a fixed sample dataset from **packages/frontend/src/data/field-service-seed.json**.
 
 1. In the hosted app, navigate directly to `/_admin/` by appending it to the hosting URL.
 
 1. Confirm that the admin page is accessible while you are signed in.
 
-1. Select **Seed data**.
+1. Check the workspace and app item IDs shown on the page, and confirm that they identify your app.
+
+1. Select **Restore sample data**. This adds missing records from a fixed dataset of 12 synthetic Service Pros and 1,040 work orders spanning April 30, 2025 through April 30, 2026.
 
 1. Wait for the operation to complete.
 
-	> [!Important]
-    > If you the data seeding process gives you an error (time out or fetch), you can still continue with the next tasks.
+    > [!Important]
+    > If the restore process is interrupted or gives you an error (time out or fetch), select **Restore sample data** again. Stable record IDs prevent duplicates, and existing records are not overwritten.
     > !IMAGE[Requesterror.png](instructions345417/Requesterror.png)
 
-1. Confirm that the completion message reports the number of generated service pros and work orders.
+1. Confirm that the completion message reports the current totals. Your own profile, exercise work orders, edits, and comments are preserved, so totals may be higher than the sample counts.
 
-    > [!Tip]
-    > The admin page can also reset the data back to a minimal sample dataset. Use reset only if you need to return to a small baseline.
+    > [!Alert]
+    > Do **not** select **Reset app data** to load the sample. Reset permanently removes every profile, work order, and comment in this app, including your exercise work.
 
 ## Task 2: Validate the seeded dataset in the app
 
-After the seed operation completes, confirm that the larger dataset is visible in the main app experiences.
+After the restore operation completes, confirm that the larger dataset is visible in the app.
 
-1. Return to the Service Pro view.
+1. Select **Manager** in the app navigation bar to review all sample service pros and work orders.
 
-1. Confirm that you now see a broader set of work orders across multiple statuses.
+    > [!Note]
+    > The **Jobs** view shows only your own assignments and unassigned jobs. The synthetic Service Pros are not additional login accounts.
 
-1. Open the manager view at `/manager/`.
+1. Confirm that the sample records include 92 pending/unassigned, 15 assigned, 8 in progress, 755 completed, 112 needing follow-up, and 58 cancelled work orders. The initial job and your exercise records add to these totals.
 
-1. Confirm that the manager view now shows a larger set of service pros and work orders.
+1. Use the status filters and open a few records to verify that the seeded data includes varied skills, locations, and operational states.
 
-1. Open a few records and verify that seeded data includes varied skills, locations, and operational states.
+1. Return to **Jobs** and confirm that your profile and earlier comments are still present.
 
 ## Task 3: (Optional) Add more comments for richer analysis
 
@@ -724,32 +750,30 @@ If time permits, add comments to multiple work orders so downstream analysis has
 
 1. Add one or more comments per work order.
 
-1. Confirm that each thread remains visible to both the assigned service pro and the manager.
+1. Confirm that each thread is visible from both the Service Pro and manager views.
 
-This optional step improves the quality of natural-language insights in the next part of the lab.
+You now have a production-deployed app with a realistic dataset ready for analysis.
 
-You now have a production-deployed app with a realistic dataset ready for analysis-oriented workflows.
-
-Continue with **Next →** to Explore Data with Fabric Intelligence.
+Continue with **Next →** to add a semantic-model dashboard to the app.
 
 ===
 
-# Exercise 8: Explore Data with Fabric Intelligence
+# Exercise 8: Add a Semantic-Model Dashboard to the App
 
-In Exercise 7, you seeded the database with a realistic production dataset. In this exercise, you will use Microsoft Fabric intelligence capabilities to query that data using natural language.
+In Exercise 7, you seeded the database with a realistic production dataset. In this exercise, you will turn that operational data into insights and bring them back into the app.
 
-The Microsoft Fabric SQL Database provisioned by Rayfin is a first-class citizen in your Fabric workspace. You will build a Power BI semantic model over it, publish it to Fabric, and create a **Fabric data agent** that lets you ask questions like "Which Service Pro has the most completed jobs?" without writing a single line of SQL.
+The Microsoft Fabric SQL Database provisioned by Rayfin is a first-class citizen in your Fabric workspace. You will build a Power BI semantic model over it, then use Rayfin's **Semantic Model connector** and GitHub Copilot CLI to add an operational dashboard to the existing Field Services app. The dashboard queries the semantic model through the connector rather than reading the operational tables directly.
 
 By completing this exercise, you will:
 
-- Build and publish a semantic model over the service pro, work order, and comments tables.
-- Create a Fabric data agent backed by the semantic model.
-- Query the agent with natural-language questions about your production data.
-- Optionally call the agent from a Fabric notebook using the Fabric Data Agent SDK.
+- Build a semantic model over the service pro, work order, and comments tables.
+- Register the semantic model as a Rayfin connector in the app.
+- Use GitHub Copilot CLI to add a dashboard that queries the semantic model.
+- Deploy the app and verify the dashboard locally and in the hosted app.
 
 ## Task 1: Build a Semantic model
 
-A semantic model gives the data agent a clean, well-described view of your data - including table relationships, friendly column names, and descriptions so it can translate natural-language questions into accurate queries.
+A semantic model gives a clean, well-described view of your data - including table relationships, friendly column names, and descriptions - that apps and tools can query consistently.
 
 1. Navigate to the Microsoft Fabric portal and open the workspace you created for this lab.
 
@@ -767,8 +791,8 @@ A semantic model gives the data agent a clean, well-described view of your data 
 
 1. Select the **ServicePros**, **WorkOrders**, and **WorkOrderComments** tables to include in the model and select **Confirm** to create the model.
 
-	> [!Tip]
-    > If you don't see the **WordOrderComments** table when creating a semantic model please wait a few minutes, refresh your page and create the semantic model again.
+    > [!Tip]
+    > If you don't see the **WorkOrderComments** table when creating a semantic model please wait a few minutes, refresh your page and create the semantic model again.
 
     !IMAGE[fabric-select-tables-semantic-model.png](instructions345417/fabric-select-tables-semantic-model.png)
 
@@ -783,7 +807,7 @@ A semantic model gives the data agent a clean, well-described view of your data 
 
 1. Again, confirm the relationship settings in the New relationship dialog and select **Save**.
 
-1. Rename key columns to clear, readable labels. For each of the three tables rename the following columns:
+1. Rename key columns to clear, readable labels. For the following tables, rename these columns:
 
     a. ServicePros:
     - **id** → `ServiceProId`
@@ -803,67 +827,106 @@ A semantic model gives the data agent a clean, well-described view of your data 
     !IMAGE[fabric-add-table-descriptions.png](instructions345417/fabric-add-table-descriptions.png)
 
     > [!Tip]
-    > Adding descriptions is optional but highly recommended, as the data agent uses them to understand your data and answer questions accurately. Spend a few minutes here, it pays back tenfold in agent answer quality.
+    > Adding descriptions is optional but highly recommended. Clear names and descriptions help GitHub Copilot CLI and other tools understand your data and write accurate queries.
 
-## Task 2: Create a Fabric data agent
+1. Confirm that the model can query the seeded data. Refresh it if its storage mode requires a refresh.
 
-1. Switch to your workspace on the left navigation pane and select **+ New item** from the top menu.
+1. Record the IDs the connector needs. With the **FieldServices** semantic model open, copy the URL from the browser address bar. It should look like `https://app.fabric.microsoft.com/groups/<workspace-id>/datasets/<semantic-model-item-id>/...`. Note the **workspace ID** and the **semantic model item ID**, for example in Notepad.
 
-1. In the dialog, search for and select **Data agent**.
+## Task 2: Connect the semantic model to the app
 
-1. Name the agent `field-services-agent`.
+Register the semantic model as a Rayfin connector in the existing **field-services-app** project.
 
-1. In the **Explorer** panel, select **Add Data > Data Source**.
+1. Return to a terminal in Visual Studio Code in the **field-services-app** folder. Do not create a second app or replace the Field Services template.
 
-1. In the **Add data source** dialog, select the **Semantic model** you created in Task 1 and select **Add**.
+1. Add a connector named **fieldservicesmodel**. Replace `<workspace-id>` and `<semantic-model-item-id>` with the values you recorded in Task 1:
 
-    !IMAGE[fabric-add-data-source-agent.png](instructions345417/fabric-add-data-source-agent.png)
-
-1. In the explorer panel, select the tables you want the agent to have access to. Check the boxes next to **ServicePros**, **WorkOrders**, and **WorkOrderComments**.
-
-1. Select **Agent Iinstructions** in the toolbar and add the following domain context, deleting any placeholder text:
-
-    ```text
-    This is a field-services work-order management app. Service Pros perform jobs at customer addresses. WorkOrders have a status (pending, assigned, in_progress, completed, needs_followup, cancelled) and may be assigned to one ServicePro. Use Scheduled date for time-based questions about when jobs happen.
+    ```shell
+    npx @microsoft/rayfin@experimental connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
     ```
 
-1. Close the Agent Instructions editor.
+1. Run the version-matched package installation command printed by the CLI.
 
-## Task 3: Query the agent with natural-language questions
+    > [!Important]
+    > Keep the connector and SDK packages on the matching **experimental** release. Do not substitute `@latest` or stable versions.
 
-Use the agent's chat interface to ask questions about your seeded production data.
+1. Open **rayfin/rayfin.yml** and review the new connector entry. Confirm that it points to your semantic model and uses delegated authentication: queries run as the signed-in user, who must have Build and Read permissions on the model.
 
-1. In the agent chat pane, ask the following questions one at a time and review the results:
+1. Open **rayfin/connectors/fieldservicesmodel/schema.ts** and review it. This file is generated, so keep it unchanged.
 
-    - `How many work orders do we have in total?`
-    - `How many work orders are assigned to each Service Pro?`
-    - `List all work orders scheduled for the next 7 days.`
-    - `Which Service Pros have plumbing in their skills and have no in-progress jobs?`
+1. Inspect the model before writing any queries:
 
-1. For each response, expand the steps completed to see the generated DAX query and the returned answer.
+    ```shell
+    npx @microsoft/rayfin@experimental connector inspect --name fieldservicesmodel
+    ```
 
-1. Publish the data agent by selecting **Publish** from the top toolbar. Once published, the agent can be accessed from other Fabric experiences such as notebooks and the standalone Copilot experience.
+    Note the actual table, column, and measure names, including the columns you renamed in Task 1.
 
-1. In the publish dialog, provide the following description for the agent:
+> [!Note]
+> The connector requires the Fabric Apps workload and the **Semantic Model Execute Queries REST API** tenant setting to be enabled. If queries fail with a tenant or permission error, ask your lab instructor for help. To learn more, see the [Rayfin Semantic Model connector documentation](https://rayfin.ai/docs/connectors/semantic-models).
+
+## Task 3: Add the dashboard with Copilot CLI
+
+1. Launch GitHub Copilot CLI from the **field-services-app** folder:
+
+    ```shell
+    copilot
+    ```
+
+1. In the GitHub Copilot CLI prompt, paste the following implementation request:
 
     ```text
-    This agent answers questions about field service work orders, including assigned service professionals, job statuses, and scheduled dates.
+    Add an operational dashboard to the existing Field Services app, reachable from the manager view. Use the registered fieldservicesmodel Semantic Model connector.
+
+    Read the project instructions, Rayfin guidance, generated connector schema, and semantic model metadata before editing. Inspect the model before writing DAX; do not guess table, column, or measure names.
+
+    Use Rayfin's experimental release channel for any Rayfin commands or package additions. Keep Rayfin dependencies version-matched; do not switch to latest or stable.
+
+    Show total work orders, work orders by status, and work orders by assigned service pro. Obtain every dashboard metric from the semantic model through the connector, not from direct database queries or mock data.
+
+    Extend the existing data-access layer with ConnectorsRayfinClient while preserving the app's schema, authentication, data operations, and comments feature. Include the generated connectorConfig in the client's connectors option and register fabricSemanticModel() in its runtime map. Keep fieldservicesmodel as the connector key throughout.
+
+    Use executeQuery for DAX, check result.status, and map result.table.columns to the row-major result.table.rows. Bound result sizes explicitly. Show loading, empty, and error states; show connector error details and requestId instead of substituting zero values or sample data.
+
+    Reuse the app's components and styling. Keep the existing Fabric sign-in flow and do not add credentials, access tokens, or direct Execute Queries REST API calls. Generate the changes for review; do not deploy yet.
     ```
+
+1. Review the plan and allow GitHub Copilot CLI to apply the code changes.
+
+1. Open the Visual Studio Code Source Control view and review the changed files. Confirm that:
+
+    - The dashboard gets its data through the **fieldservicesmodel** connector.
+    - The connector configuration, generated types, client options, and runtime registration all use the same **fieldservicesmodel** key.
+    - The existing profile, work-order, and comments workflows remain intact.
+
+## Task 4: Deploy and verify the dashboard
+
+1. Exit GitHub Copilot CLI by typing `/exit` in the prompt.
+
+1. Deploy the connector configuration and the dashboard:
+
+    ```shell
+    npx rayfin up
+    ```
+
+1. Start the local Vite dev server:
+
+    ```shell
+    npm run dev
+    ```
+
+1. Open the local app, select **Manager** in the app navigation bar, and open the new dashboard.
+
+1. Confirm that the total work-order count, the breakdown by status, and the breakdown by Service Pro look consistent with the seeded data from Exercise 7, accounting for unassigned orders.
+
+1. Open the live hosting URL from Exercise 5 and repeat the checks in the hosted app. A successful local query alone does not verify the deployed connector.
+
+1. Confirm that any failed query is shown as an error rather than as an empty dashboard or zero counts.
 
     > [!Tip]
-    > The description is important as it helps other agents and copilot experiences understand the agent's purpose and capabilities. A clear description improves the chances of the agent being recommended for relevant questions.
+    > If a query fails, check the connector's workspace and item IDs, the signed-in user's permissions on the semantic model, and the actual DAX field names. Use the connector's error category, message, and request ID to investigate, or give these details to GitHub Copilot CLI and ask for a targeted fix.
 
-1. Select the **Standalone Copilot** from the left navigation pane.
-
-1. In the Copilot text input, ask a question that the agent should be able to answer, such as:
-
-    ```text
-    List all work orders scheduled for the next 7 days.
-    ```
-
-    You should see the response from copilot using the data agent as its knowledge source.
-
-You have successfully created a Fabric data agent over your production data and used it to answer natural-language questions.
+You have completed the loop from operational app data to a semantic model and back to an in-app dashboard.
 
 Continue with **Next →** for the conclusion of the lab and next steps.
 
@@ -878,8 +941,14 @@ In one lab session you just:
 3. Deployed it to Microsoft Fabric with one command.
 4. Added a real schema-backed feature using the GitHub Copilot CLI and the rayfin agent skill.
 5. Pushed the change back to production with the same one-command deploy.
-6. Seeded production data and built a natural-language interface over it with a Fabric data agent.
+6. Seeded production data, built a Fabric semantic model over it, and used the Rayfin Semantic Model connector to bring insights back into the app with a dashboard.
 
-No infrastructure scripts. No migration files written by hand. No bespoke auth plumbing. **From zero to a deployed, intelligent enterprise app - using a managed backend, decorators, and coding agents.**
+No infrastructure scripts. No migration files written by hand. No bespoke auth plumbing. **From zero to a deployed, data-driven enterprise app - using a managed backend, decorators, and coding agents.**
 
 I hope you enjoyed the lab and are excited about the possibilities of building with Microsoft Fabric and Rayfin SDK. The tools and patterns you saw here are designed to help you build faster, smarter, and more maintainable applications on top of Microsoft Fabric's powerful data and AI capabilities.
+
+To keep exploring, check out:
+
+- [Rayfin documentation](https://aka.ms/rayfin)
+- [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/)
+- [GitHub Copilot CLI documentation](https://docs.github.com/copilot/how-tos/use-copilot-agents/use-copilot-in-the-cli)
