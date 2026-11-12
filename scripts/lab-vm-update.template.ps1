@@ -108,28 +108,53 @@ __PAYLOAD_BASE64__
             # shows in the table. $labRoot is the lab folder, already updated; $staging holds the unpacked package.
             # Example: Invoke-Update 'My step' $stepTarget { <do the work>; 'Short result' }
 
-            # Runs an npm/npx command and returns its output; throws with the output when it fails.
-            function Invoke-Npm([string]$Command, [string[]]$Arguments) {
-                $previous = $ErrorActionPreference
-                $ErrorActionPreference = 'Continue'
+            # Runs a command and returns its stdout; throws with its stderr when it fails. Output goes to temp files,
+            # not PowerShell pipes: node can crash on exit (0xC0000409) when its stdout is a pipe on Windows, and
+            # npm notices on stderr must not end up in the parsed output.
+            function Invoke-Npm([string]$FilePath, [string[]]$Arguments) {
+                $outFile = [IO.Path]::GetTempFileName()
+                $errFile = [IO.Path]::GetTempFileName()
+                $previousNotifier = $env:NPM_CONFIG_UPDATE_NOTIFIER
+                $env:NPM_CONFIG_UPDATE_NOTIFIER = 'false'
                 try {
-                    $output = (& $Command @Arguments 2>&1 | ForEach-Object { "$_" }) -join "`n"
-                    $code = $LASTEXITCODE
+                    $quoted = @($Arguments | ForEach-Object { if ($_ -match '\s') { '"' + $_ + '"' } else { $_ } })
+                    $process = Start-Process -FilePath $FilePath -ArgumentList $quoted -NoNewWindow -PassThru `
+                        -RedirectStandardOutput $outFile -RedirectStandardError $errFile
+                    # Reading Handle first makes ExitCode reliable in Windows PowerShell 5.1.
+                    $null = $process.Handle
+                    $process.WaitForExit()
+                    $code = $process.ExitCode
+                    $stdout = [IO.File]::ReadAllText($outFile).Trim()
+                    $stderr = [IO.File]::ReadAllText($errFile).Trim()
                 } finally {
-                    $ErrorActionPreference = $previous
+                    $env:NPM_CONFIG_UPDATE_NOTIFIER = $previousNotifier
+                    Remove-Item -LiteralPath $outFile, $errFile -Force -ErrorAction SilentlyContinue
                 }
-                if ($code -ne 0) { throw "$Command $($Arguments -join ' ') failed (exit code $code): $output" }
-                $output.Trim()
+                if ($code -ne 0) {
+                    $details = if ($stderr) { $stderr } else { $stdout }
+                    throw "$(Split-Path -Leaf $FilePath) $($Arguments -join ' ') failed (exit code $code): $details"
+                }
+                $stdout
             }
 
-            $npmCommand = if ($env:OS -eq 'Windows_NT') { 'npm.cmd' } else { 'npm' }
-            $npxCommand = if ($env:OS -eq 'Windows_NT') { 'npx.cmd' } else { 'npx' }
+            # The last non-empty line of a command's output, where npm prints versions.
+            function Get-LastLine([string]$Text) {
+                $lines = @($Text -split "`r?`n" | Where-Object { $_.Trim() })
+                if ($lines.Count) { $lines[-1].Trim() } else { '' }
+            }
 
+            $isWindowsOs = $env:OS -eq 'Windows_NT'
+            $npmCommand = if ($isWindowsOs) { 'npm.cmd' } else { 'npm' }
+            $npxCommand = if ($isWindowsOs) { 'npx.cmd' } else { 'npx' }
             $npmPath = (Get-Command $npmCommand -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+            $npxPath = (Get-Command $npxCommand -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+            $nodePath = (Get-Command 'node' -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+
             Invoke-Update 'npm (latest)' $(if ($npmPath) { $npmPath } else { 'npm' }) {
                 if (-not $npmPath) { throw 'npm is not on PATH. Install Node.js first.' }
-                $current = Invoke-Npm $npmCommand @('--version')
-                $latest = Invoke-Npm $npmCommand @('view', 'npm@latest', 'version')
+                $current = Get-LastLine (Invoke-Npm $npmPath @('--version'))
+                $latest = Get-LastLine (Invoke-Npm $npmPath @('view', 'npm@latest', 'version'))
+                if ($latest -notmatch '^\d+\.\d+\.\d+') { throw "Unexpected latest npm version: $latest" }
                 if ($current -eq $latest) {
                     "Already $current"
                 } elseif ($env:LAB_FILES_DIR) {
@@ -142,18 +167,18 @@ __PAYLOAD_BASE64__
                     $npmCli = [IO.Path]::Combine($npmDir, 'node_modules', 'npm', 'bin', 'npm-cli.js')
                     $installArgs = @('install', '-g', "npm@$latest", '--engine-strict', '--no-fund', '--no-audit')
                     try {
-                        if (($env:OS -eq 'Windows_NT') -and (Test-Path -LiteralPath $npmCli)) {
-                            Invoke-Npm 'node' (@($npmCli) + $installArgs + @('--prefix', $npmDir)) | Out-Null
+                        if ($isWindowsOs -and $nodePath -and (Test-Path -LiteralPath $npmCli)) {
+                            Invoke-Npm $nodePath (@($npmCli) + $installArgs + @('--prefix', $npmDir)) | Out-Null
                         } else {
-                            Invoke-Npm $npmCommand $installArgs | Out-Null
+                            Invoke-Npm $npmPath $installArgs | Out-Null
                         }
                     } catch {
                         $message = $_.Exception.Message
                         if ($message -match 'EPERM|EACCES') { throw 'No permission to update the global npm. Open PowerShell as administrator and run the command again.' }
-                        if ($message -match 'EBADENGINE') { throw "npm $latest doesn't support Node.js $(node --version). Update Node.js first." }
+                        if ($message -match 'EBADENGINE') { throw "npm $latest doesn't support the installed Node.js version. Update Node.js first." }
                         throw
                     }
-                    $updated = Invoke-Npm $npmCommand @('--version')
+                    $updated = Get-LastLine (Invoke-Npm $npmPath @('--version'))
                     if ($updated -ne $latest) { throw "npm $latest was installed, but $npmPath still runs npm $updated. Check PATH." }
                     "$current -> $updated"
                 }
@@ -174,9 +199,9 @@ __PAYLOAD_BASE64__
                     $cliVersion = $manifest.devDependencies.'@microsoft/rayfin-cli'
                 }
                 if (-not $cliVersion) { throw 'No @microsoft/rayfin-cli version found in the template.' }
-                $printed = Invoke-Npm $npxCommand @('-y', "@microsoft/rayfin-cli@$cliVersion", '--version')
-                $lastLine = @($printed -split "`n" | Where-Object { $_.Trim() })[-1]
-                "@microsoft/rayfin-cli@$cliVersion cached (prints $lastLine)"
+                if (-not $npxPath) { throw 'npx is not on PATH. Install Node.js first.' }
+                $printed = Get-LastLine (Invoke-Npm $npxPath @('-y', "@microsoft/rayfin-cli@$cliVersion", '--version'))
+                "@microsoft/rayfin-cli@$cliVersion cached (prints $printed)"
             }
             # --- Lab-specific steps (end) -----------------------------------------------------------------
         }
