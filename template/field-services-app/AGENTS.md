@@ -2,7 +2,7 @@
 
 ## Project
 
-Use Rayfin's `experimental` release channel for all Rayfin package additions. The local `rayfin` binary comes from `@microsoft/rayfin-cli@experimental`; preserve that channel when updating dependencies.
+Use `^2.0.0` for Rayfin package additions and `@^2.0.0` in every `npm create` command. The local `rayfin` binary comes from `@microsoft/rayfin-cli@^2.0.0`; update participating Rayfin packages together and commit the root lockfile.
 
 React + TypeScript (Vite) work-order app backed by **Project Rayfin** with Radix-based UI components styled with Tailwind CSS.
 Demonstrates Service Pro profile and work-order management with Fabric Entra authentication enabled for deployed Fabric environments.
@@ -64,7 +64,7 @@ Key config/files:
 ### Service Layer
 
 - **ServiceContainer**: Asynchronous bootstrap resolves runtime configuration before React mounts and then provides synchronous service access
-- **RayfinClientService**: Manages the RayfinClient singleton instance
+- **RayfinClientService**: Composes the singleton with `RayfinClient.create`, `browserSession({ storage: true })`, and `dataService<FieldServiceSchema>()`; infer its type from the factory and dispose it only when resetting the owning service container
 - **RayfinFieldService**: Service Pro and work-order CRUD via DataApi fluent interface
 
 ### Auth Service Layer
@@ -87,6 +87,7 @@ Key config/files:
 
 - The seed generator defaults to `2026-04-30`, not the current date. Its baseline is 12 synthetic profiles and 1,040 work orders; keep expected results in the README aligned.
 - `restoreSeedData` inserts missing deterministic UUIDs only. Never turn restore into a delete/overwrite operation; preserve attendee profiles and edits.
+- Bulk operations use `BulkOperation` and `useBulkOperation` for browser-side checkpoints and a 20-second batch-start budget, not a hard request timeout. Retry timeout-only/throttling failures automatically with backoff and Retry-After support; retain original batch errors, stop on mixed/permanent failures, and allow pause during backoff. Keep checkpoints scoped to app/account, reconcile uncertain writes, preserve dependency phases, and require fresh reset confirmation on manual resume. Functions remain disabled.
 - `resetDemoData` requires `RESET <current-app-item-id>`, deletes orders before profiles, and recreates one initial job. No Fabric infrastructure is deleted. Obtain explicit owner approval before rehearsing reset against existing data.
 - The navigation switch and typed reset confirmation are UX safeguards, not authorization boundaries.
 
@@ -111,6 +112,8 @@ Key config/files:
 - Keep UI logic in `packages/frontend/src/`, data model code in `packages/data/src/`, and browser-safe contracts in `packages/shared/src/`.
 - Services follow the singleton pattern via `ServiceContainer`.
 - A localhost proxy URL does not mean the backend is Docker. Fabric metadata takes precedence when selecting the auth service.
+- Data reads must select the fields consumers use. Convert `Date | string` wire dates at the service boundary and re-read required fields after partial mutations; never cast a partial result to a full record.
+- Add connectors through `services.connectors: connectorsService(...)` on the existing client, preserving its auth and data services. Do not use the removed `ConnectorsRayfinClient`.
 
 ## Generated files (do not edit)
 

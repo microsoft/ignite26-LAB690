@@ -116,7 +116,7 @@ copilot --version
 Confirm that Node.js reports version 24 and the other commands report installed versions.
 
 > [!Note]
-> This lab uses the Rayfin **experimental** release channel. The create command in Exercise 2 downloads it, so you don't need a global Rayfin installation.
+> This lab uses Rayfin **^2.0.0**. The create command in Exercise 2 downloads it, so you don't need a global Rayfin installation.
 
 Select **Next →** to start the second exercise.
 
@@ -135,7 +135,7 @@ The template handles the setup for you, so you can focus on the lab.
 1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template.
 
     ```shell
-    npm create -y @microsoft/rayfin@experimental -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app"
+    npm create -y @microsoft/rayfin@^2.0.0 -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app"
     ```
 
     The CLI will then:
@@ -145,7 +145,7 @@ The template handles the setup for you, so you can focus on the lab.
     - Run `npm install` in the new project folder to pull dependencies (this can take a couple of minutes on first run).
 
     > [!Note]
-    > This lab uses Rayfin's **experimental** release channel. Use `@experimental` for project creation and Rayfin package additions, and keep Rayfin packages version-matched. Inside the generated project, use `npx rayfin` to run the installed CLI.
+    > This lab uses Rayfin **^2.0.0**. Use `@^2.0.0` in every `npm create` command and `^2.0.0` for Rayfin package additions, and keep Rayfin packages version-matched. Inside the generated project, use `npx rayfin` to run the installed CLI.
 
 1. While the install is running, open the **data** folder at **C:\LabFiles\template\field-services-app** to see the original prompt and dataset used to generate this template. This will give you a better understanding of how the app was built and ideas on how to customize it later in the lab.
 
@@ -365,7 +365,7 @@ The **rayfin up** command provisions a managed backend (database, auth, data API
 > The CLI saves the deployment details to **rayfin/.deployments.json** so subsequent **rayfin up** runs update the same deployment instead of creating a new one. Keep the generated environment files private and don't commit credentials or keys.
 
 > [!Note]
-> `npx rayfin` uses the project's installed experimental CLI. You can check its version with `npx rayfin --version`. If deployment reports that static hosting requires CLI version `1.35.1` or later, ask your lab instructor for help: the template's Rayfin packages must be updated together, and updating a global CLI alone doesn't change the project's version.
+> `npx rayfin` uses the project's installed CLI. Check that `npx rayfin --version` reports the locked 2.x version. If an older version appears, ask your lab instructor for help: the template's Rayfin packages must be updated together, and updating a global CLI alone doesn't change the project's version.
 
 ## Task 2: Start the frontend
 
@@ -545,7 +545,9 @@ Use GitHub Copilot CLI to generate the comments feature without applying the bac
     ```text
     Implement a comments feature for work orders. Comments should provide a history of interventions so service pros and the manager can communicate about a work order. Each comment must include an id, userId, createdAt, workOrderId, and content. Keep the comments section collapsed by default. Let the attendee add comments from the assigned service-pro experience and reply from the manager experience using the same signed-in account. These are switchable demonstration views, not independently authorized roles. Preserve authenticated backend access; do not treat the view switch as authorization or add a second account requirement. Generate the code, but do not apply the backend schema change yet.
 
-    Use Rayfin's experimental release channel for any Rayfin commands or package additions. Keep Rayfin dependencies version-matched; do not switch to latest or stable.
+    Use ^2.0.0 for Rayfin package additions and @^2.0.0 in every npm create command, rather than latest or prerelease tags. Use the project's installed CLI and keep participating Rayfin packages version-matched.
+
+    Preserve the existing RayfinClient.create composition with browserSession and dataService. Select every field the comments UI needs, convert wire dates at the service boundary, and do not treat partial mutation responses as complete records.
     ```
 
 1. Review the plan and allow GitHub Copilot CLI to apply the code changes.
@@ -699,13 +701,13 @@ The template includes an authenticated admin page at `/_admin/` that can restore
 1. Wait for the operation to complete.
 
     > [!Important]
-    > If the restore process is interrupted or gives you an error (time out or fetch), select **Restore sample data** again. Stable record IDs prevent duplicates, and existing records are not overwritten.
+    > Browser-side chunks continue automatically and save a resume position after confirmed operations. Timeouts and throttling retry automatically with backoff; the page shows when it is waiting. To interrupt safely, select **Pause after current batch**, including while waiting to retry. After a pause, reload, or other error, return in the same browser, app, and account and select **Resume restore**. Stable record IDs prevent duplicates, and records are not skipped or overwritten. Chunks stop starting new batches after 20 seconds; in-flight requests and verification can take longer.
     > !IMAGE[Requesterror.png](instructions345417/Requesterror.png)
 
 1. Confirm that the completion message reports the current totals. Your own profile, exercise work orders, edits, and comments are preserved, so totals may be higher than the sample counts.
 
     > [!Alert]
-    > Do **not** select **Reset app data** to load the sample. Reset permanently removes every profile, work order, and comment in this app, including your exercise work.
+    > Do **not** select **Reset app data** to load the sample. Reset permanently removes every profile, work order, and comment in this app, including your exercise work. If an approved reset is interrupted, type `RESET <current-app-item-id>` again and select **Resume reset**. **Discard checkpoint** forgets saved progress but does not undo changes.
 
 ## Task 2: Validate the seeded dataset in the app
 
@@ -781,11 +783,14 @@ A semantic model gives a clean, well-described view of your data - including tab
 
 1. Define the relationship between the **ServicePros** and **WorkOrders** tables by dragging the **servicePro_id** column from **WorkOrders** onto the **id** column in **ServicePros**.
 
-1. Power BI Service will automatically determine the cardinality and cross-filtering direction. Select **Save** in the New relationship dialog.
+1. In the **New relationship** dialog, set **Cardinality** to **Many to one (*:1)** and **Cross-filter direction** to **Single**. Confirm that **ServicePros** is on the **one** side and **Make this relationship active** is selected. Leave **Assume referential integrity** cleared because work orders can be unassigned, then select **Save**.
 
-1. Define the relationship between the **WorkOrders** and **WorkOrderComments** tables by dragging the **id** column from **WorkOrders** onto the **workOrder_id** column in **WorkOrderComments**.
+1. Define the relationship between the **WorkOrderComments** and **WorkOrders** tables by dragging the **workOrderId** column from **WorkOrderComments** onto the **id** column in **WorkOrders**.
 
-1. Again, confirm the relationship settings in the New relationship dialog and select **Save**.
+1. Set **Cardinality** to **Many to one (*:1)** and **Cross-filter direction** to **Single**, with **WorkOrders** on the **one** side. Keep the relationship active and select **Save**.
+
+    > [!Important]
+    > Check the relationship settings explicitly. Direct Lake can infer the wrong cardinality from the current row counts.
 
 1. Rename key columns to clear, readable labels. For the following tables, rename these columns:
 
@@ -828,7 +833,7 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 1. Run the version-matched package installation command printed by the CLI.
 
     > [!Important]
-    > Keep the connector and SDK packages on the matching **experimental** release. Do not substitute `@latest` or stable versions.
+    > Keep connector and SDK packages on the same release within **^2.0.0**. Do not substitute moving tags or prereleases.
 
 1. Open **rayfin/rayfin.yml** and review the new connector entry. Confirm that it points to your semantic model and uses delegated authentication: queries run as the signed-in user, who must have Build and Read permissions on the model.
 
@@ -838,6 +843,12 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 
     ```shell
     npx rayfin connector inspect --name fieldservicesmodel
+    ```
+
+    If metadata inspection fails with a DAX query error, inspect each table with a bounded sample. Replace `<table-name>` with the actual name shown in the model:
+
+    ```shell
+    npx rayfin connector inspect --name fieldservicesmodel --entity "<table-name>" --rows 1
     ```
 
     Note the actual table, column, and measure names, including the columns you renamed in Task 1.
@@ -860,13 +871,13 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 
     Read the project instructions, Rayfin guidance, generated connector schema, and semantic model metadata before editing. Inspect the model before writing DAX; do not guess table, column, or measure names.
 
-    Use Rayfin's experimental release channel for any Rayfin commands or package additions. Keep Rayfin dependencies version-matched; do not switch to latest or stable.
+    Use ^2.0.0 for Rayfin package additions and @^2.0.0 in every npm create command, rather than latest or prerelease tags. Use the project's installed CLI and keep participating Rayfin packages version-matched.
 
     Show total work orders, work orders by status, and work orders by assigned service pro. Obtain every dashboard metric from the semantic model through the connector, not from direct database queries or mock data.
 
-    Extend the existing data-access layer with ConnectorsRayfinClient while preserving the app's schema, authentication, data operations, and comments feature. Include the generated connectorConfig in the client's connectors option and register fabricSemanticModel() in its runtime map. Keep fieldservicesmodel as the connector key throughout.
+    Extend the existing RayfinClient.create composition with connectorsService from @microsoft/rayfin-connectors while preserving browserSession, dataService<FieldServiceSchema>(), the app's schema, authentication, data operations, and comments feature. Register services.connectors with connectorsService<GeneratedConnectorsSchema>({ configs: { fieldservicesmodel: connectorConfig }, runtime: { fieldservicesmodel: fabricSemanticModel() } }), using the actual generated schema type and connectorConfig exports. Import fabricSemanticModel from @microsoft/rayfin-connector-fabric-semanticmodel. Infer the client type from the factory; do not use the removed ConnectorsRayfinClient. Keep fieldservicesmodel as the connector key throughout, and keep source declarations under top-level connectors in rayfin.yml.
 
-    Use executeQuery for DAX, check result.status, and map result.table.columns to the row-major result.table.rows. Bound result sizes explicitly. Show loading, empty, and error states; show connector error details and requestId instead of substituting zero values or sample data.
+    Use executeQuery for DAX, check result.status, and map result.table.columns to the row-major result.table.rows. Set an explicit resultSetRowCountLimit and reject responses that exceed it rather than silently truncating them. Show loading, empty, and error states; show connector error details and requestId instead of substituting zero values or sample data.
 
     Reuse the app's components and styling. Keep the existing Fabric sign-in flow and do not add credentials, access tokens, or direct Execute Queries REST API calls. Generate the changes for review; do not deploy yet.
     ```
@@ -902,6 +913,8 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 1. Open the live hosting URL from Exercise 5 and repeat the checks in the hosted app. A successful local query alone does not verify the deployed connector.
 
 1. Confirm that any failed query is shown as an error rather than as an empty dashboard or zero counts.
+
+1. Verify the row limit locally and in the hosted app with a query that exceeds it. Treat an over-limit response as an error even if the connector reports success.
 
     > [!Tip]
     > If a query fails, check the connector's workspace and item IDs, the signed-in user's permissions on the semantic model, and the actual DAX field names. Use the connector's error category, message, and request ID to investigate, or give these details to GitHub Copilot CLI and ask for a targeted fix.

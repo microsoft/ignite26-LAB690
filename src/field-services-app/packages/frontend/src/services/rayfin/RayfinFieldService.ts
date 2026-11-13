@@ -1,4 +1,5 @@
 import type { ServicePro, WorkOrder, WorkOrderStatus, WorkOrderComment } from '@field-services/shared';
+import type { GraphQLResponseValue } from '@microsoft/rayfin-data';
 import { v5 as uuidv5 } from 'uuid';
 import {
   AdminDataSummary,
@@ -6,8 +7,9 @@ import {
   IFieldService,
   NewWorkOrderCommentInput,
   NewWorkOrderInput,
-  SeedProgressCallback,
+  BulkResult,
 } from '../interfaces/IFieldService';
+import { createBulkCheckpoint, parseBulkCheckpoint, runBulkSlice, type BulkOptions, type BulkTarget } from '../BulkOperation';
 
 import { getRayfinClient } from './RayfinClientService';
 
@@ -67,32 +69,32 @@ const INITIAL_DEMO_ORDER = {
   note: 'Initial example work order. Leave unassigned so any Service Pro can accept it.',
 };
 
-const WRITE_BATCH_SIZE = 5;
 const READ_PAGE_SIZE = 100;
 const BASELINE_DATE = new Date('2026-04-30T12:00:00.000Z');
 
-function seedId(kind: 'profile' | 'order', key: string): string {
-  return uuidv5(`lab690:${kind}:${key}`, uuidv5.URL);
+function toServicePro(profile: GraphQLResponseValue<ServicePro>): ServicePro {
+  return {
+    ...profile,
+    createdAt: new Date(profile.createdAt),
+    updatedAt: new Date(profile.updatedAt),
+  };
 }
 
-async function runInBatches<T>(
-  items: T[],
-  operation: (item: T) => Promise<unknown>,
-  onProgress?: (completed: number, total: number) => void
-): Promise<void> {
-  let completed = 0;
-  for (let index = 0; index < items.length; index += WRITE_BATCH_SIZE) {
-    const batch = items.slice(index, index + WRITE_BATCH_SIZE);
-    const results = await Promise.allSettled(batch.map(operation));
-    const failures = results.filter(result => result.status === 'rejected');
-    if (failures.length) {
-      throw new Error(
-        `${failures.length} data operation(s) failed. Some records may have been processed. ${failures.map(result => String(result.reason)).join('; ')}`
-      );
-    }
-    completed += batch.length;
-    onProgress?.(completed, items.length);
-  }
+function toWorkOrder(order: GraphQLResponseValue<WorkOrder>): WorkOrder {
+  return {
+    ...order,
+    scheduledAt: new Date(order.scheduledAt),
+    createdAt: new Date(order.createdAt),
+    updatedAt: new Date(order.updatedAt),
+  };
+}
+
+function toWorkOrderComment(comment: GraphQLResponseValue<WorkOrderComment>): WorkOrderComment {
+  return { ...comment, createdAt: new Date(comment.createdAt) };
+}
+
+function seedId(kind: 'profile' | 'order', key: string): string {
+  return uuidv5(`lab690:${kind}:${key}`, uuidv5.URL);
 }
 
 export class RayfinFieldService implements IFieldService {
@@ -128,21 +130,30 @@ export class RayfinFieldService implements IFieldService {
 
   async restoreSeedData(
     seedData: FieldServiceSeedDataset,
-    onProgress?: SeedProgressCallback
-  ): Promise<AdminDataSummary> {
+    options: BulkOptions
+  ): Promise<BulkResult> {
     this.validateSeedData(seedData);
     const client = getRayfinClient();
-    const [existingProfiles, existingOrders] = await Promise.all([
-      this.getServicePros(), this.getWorkOrders(),
-    ]);
-    const profileIds = new Set(existingProfiles.map(profile => profile.id));
-    const orderIds = new Set(existingOrders.map(order => order.id));
-
-    const serviceProIdsBySeedId = new Map<string, string>();
-    let profileCompleted = 0;
-    for (const seedProfile of seedData.servicePros) {
-      const id = seedId('profile', seedProfile.seedId);
-      if (!profileIds.has(id)) {
+    const profiles = new Map(seedData.servicePros.map(profile => [seedId('profile', profile.seedId), profile]));
+    const orders = new Map(seedData.workOrders.map(order => [seedId('order', order.id), order]));
+    const targets: BulkTarget[] = [
+      ...[...profiles.keys()].map(id => ({ entity: 'servicePros' as const, id })),
+      ...[...orders.keys()].map(id => ({ entity: 'workOrders' as const, id })),
+    ];
+    const datasetId = uuidv5(JSON.stringify(seedData), uuidv5.URL);
+    const start = options.checkpoint
+      ? parseBulkCheckpoint(options.checkpoint)
+      : createBulkCheckpoint('seed', datasetId, targets);
+    if (start.action !== 'seed' || start.datasetId !== datasetId ||
+        JSON.stringify(start.targets) !== JSON.stringify(targets)) {
+      throw new Error('The saved restore checkpoint does not match this seed dataset. Discard it and start a new restore.');
+    }
+    const checkpoint = await runBulkSlice(start, async ({ entity, id }) => {
+      if (entity === 'servicePros') {
+        const [existing] = await client.data.ServicePro.select(['id']).where({ id: { eq: id } }).first(1).execute();
+        if (existing) return;
+        const seedProfile = profiles.get(id);
+        if (!seedProfile) throw new Error('Unknown sample profile.');
         await client.data.ServicePro.create({
           id,
           user_id: seedProfile.userId,
@@ -151,27 +162,14 @@ export class RayfinFieldService implements IFieldService {
           createdAt: BASELINE_DATE,
           updatedAt: BASELINE_DATE,
         });
-      }
-      serviceProIdsBySeedId.set(seedProfile.seedId, id);
-      profileCompleted++;
-      onProgress?.('servicePros', profileCompleted, seedData.servicePros.length);
-    }
-
-    await runInBatches(
-      seedData.workOrders,
-      async (seedOrder) => {
-        const id = seedId('order', seedOrder.id);
-        if (orderIds.has(id)) return;
+      } else {
+        const [existing] = await client.data.WorkOrder.select(['id']).where({ id: { eq: id } }).first(1).execute();
+        if (existing) return;
+        const seedOrder = orders.get(id);
+        if (!seedOrder) throw new Error('Unknown sample work order.');
         const serviceProId = seedOrder.serviceProSeedId
-          ? serviceProIdsBySeedId.get(seedOrder.serviceProSeedId)
+          ? seedId('profile', seedOrder.serviceProSeedId)
           : null;
-
-        if (seedOrder.serviceProSeedId && !serviceProId) {
-          throw new Error(
-            `Seed work order ${seedOrder.id} references unknown Service Pro ${seedOrder.serviceProSeedId}.`
-          );
-        }
-
         await client.data.WorkOrder.create({
           id,
           customer: seedOrder.customer,
@@ -184,31 +182,72 @@ export class RayfinFieldService implements IFieldService {
           createdAt: BASELINE_DATE,
           updatedAt: BASELINE_DATE,
         });
-      },
-      (completed, total) => onProgress?.('workOrders', completed, total)
-    );
+      }
+    }, options);
+    if (checkpoint.nextIndex < checkpoint.targets.length) return { done: false, checkpoint };
 
-    const [profiles, orders] = await Promise.all([this.getServicePros(), this.getWorkOrders()]);
-    const restoredProfiles = new Set(profiles.map(profile => profile.id));
-    const restoredOrders = new Set(orders.map(order => order.id));
+    const [currentProfiles, currentOrders] = await Promise.all([this.getServicePros(), this.getWorkOrders()]);
+    const restoredProfiles = new Set(currentProfiles.map(profile => profile.id));
+    const restoredOrders = new Set(currentOrders.map(order => order.id));
     if (seedData.servicePros.some(profile => !restoredProfiles.has(seedId('profile', profile.seedId))) ||
         seedData.workOrders.some(order => !restoredOrders.has(seedId('order', order.id)))) {
-      throw new Error('Some sample records are missing. Retry Restore sample data to add them without replacing existing work.');
+      options.onCheckpoint({ ...checkpoint, nextIndex: 0 });
+      throw new Error('Some sample records are missing. Resume to add them without replacing existing work.');
     }
 
     this.demoDataChecked = true;
-    return this.getDataSummary();
+    return { done: true, checkpoint, summary: await this.getDataSummary() };
   }
 
-  async resetDemoData(confirmation: string): Promise<AdminDataSummary> {
+  async resetDemoData(confirmation: string, options: BulkOptions): Promise<BulkResult> {
     const itemId = getRayfinClient().runtimeConfig?.itemId;
     if (!itemId || confirmation !== `RESET ${itemId}`) {
       throw new Error('Reset requires confirmation of the current Fabric app item ID.');
     }
-    await this.clearAllData();
-    await this.createInitialOrder();
+    let start = options.checkpoint ? parseBulkCheckpoint(options.checkpoint) : undefined;
+    if (!start) {
+      const [workOrders, servicePros, comments] = await Promise.all([
+        this.getWorkOrders(), this.getServicePros(), this.getCommentsByFilter(),
+      ]);
+      start = createBulkCheckpoint('reset', 'reset-v1', [
+        ...comments.map(({ id }) => ({ entity: 'comments' as const, id })),
+        ...workOrders.map(({ id }) => ({ entity: 'workOrders' as const, id })),
+        ...servicePros.map(({ id }) => ({ entity: 'servicePros' as const, id })),
+        { entity: 'initialOrder', id: INITIAL_DEMO_ORDER.id },
+      ]);
+    }
+    const rank = { comments: 0, workOrders: 1, servicePros: 2, initialOrder: 3 };
+    if (start.action !== 'reset' || start.datasetId !== 'reset-v1' ||
+        start.targets.at(-1)?.entity !== 'initialOrder' ||
+        start.targets.at(-1)?.id !== INITIAL_DEMO_ORDER.id ||
+        start.targets.some((target, index) => index > 0 &&
+          (rank[target.entity] < rank[start.targets[index - 1].entity] ||
+           start.targets[index - 1].entity === 'initialOrder'))) {
+      throw new Error('Invalid reset checkpoint. Discard it and start a new reset.');
+    }
+    const client = getRayfinClient();
+    const checkpoint = await runBulkSlice(start, async ({ entity, id }) => {
+      if (entity === 'initialOrder') {
+        const [existing] = await client.data.WorkOrder.select(['id']).where({ id: { eq: id } }).first(1).execute();
+        if (!existing) await this.createInitialOrder();
+      } else {
+        const table = entity === 'comments' ? client.data.WorkOrderComment
+          : entity === 'workOrders' ? client.data.WorkOrder : client.data.ServicePro;
+        const query = entity === 'comments' ? client.data.WorkOrderComment.select(['id'])
+          : entity === 'workOrders' ? client.data.WorkOrder.select(['id']) : client.data.ServicePro.select(['id']);
+        const [existing] = await query.where({ id: { eq: id } }).first(1).execute();
+        if (existing) await table.delete({ id });
+      }
+    }, options);
+    if (checkpoint.nextIndex < checkpoint.targets.length) return { done: false, checkpoint };
+    const summary = await this.getDataSummary();
+    const initialOrder = await this.getWorkOrderById(INITIAL_DEMO_ORDER.id);
+    if (summary.comments !== 0 || summary.servicePros !== 0 || summary.workOrders !== 1 ||
+        initialOrder.servicePro_id || initialOrder.status !== 'pending') {
+      throw new Error('Reset verification failed; data changed during reset. Close other app tabs, discard the checkpoint, and start a new reset.');
+    }
     this.demoDataChecked = true;
-    return this.getDataSummary();
+    return { done: true, checkpoint, summary };
   }
 
   private async createInitialOrder(): Promise<void> {
@@ -236,7 +275,7 @@ export class RayfinFieldService implements IFieldService {
       }
 
       const page = await query.executePaginated();
-      servicePros.push(...page.items);
+      servicePros.push(...page.items.map(toServicePro));
       cursor = page.endCursor ?? null;
       hasNextPage = page.hasNextPage;
     }
@@ -246,18 +285,11 @@ export class RayfinFieldService implements IFieldService {
 
   async getMyProfile(userId: string): Promise<ServicePro | null> {
     const client = getRayfinClient();
-    const [profile] = await client.data.ServicePro.select([
-      'id',
-      'name',
-      'skills',
-      'user_id',
-      'createdAt',
-      'updatedAt',
-    ])
+    const [profile] = await client.data.ServicePro.select(SERVICE_PRO_FIELDS)
       .where({ user_id: { eq: userId } })
       .first(1)
       .execute();
-    return profile ?? null;
+    return profile ? toServicePro(profile) : null;
   }
 
   async createProfile(
@@ -267,13 +299,14 @@ export class RayfinFieldService implements IFieldService {
   ): Promise<ServicePro> {
     const client = getRayfinClient();
     const now = new Date();
-    return client.data.ServicePro.create({
+    const profile = await client.data.ServicePro.create({
       name,
       skills,
       user_id: userId,
       createdAt: now,
       updatedAt: now,
     });
+    return toServicePro(profile);
   }
 
   async updateProfile(
@@ -282,7 +315,7 @@ export class RayfinFieldService implements IFieldService {
     skills: string
   ): Promise<ServicePro> {
     const client = getRayfinClient();
-    return client.data.ServicePro.update(
+    await client.data.ServicePro.update(
       { id },
       {
         name,
@@ -290,6 +323,14 @@ export class RayfinFieldService implements IFieldService {
         updatedAt: new Date(),
       }
     );
+    const [profile] = await client.data.ServicePro.select(SERVICE_PRO_FIELDS)
+      .where({ id: { eq: id } })
+      .first(1)
+      .execute();
+    if (!profile) {
+      throw new Error('Updated Service Pro profile could not be read.');
+    }
+    return toServicePro(profile);
   }
 
   async getWorkOrders(): Promise<WorkOrder[]> {
@@ -345,7 +386,7 @@ export class RayfinFieldService implements IFieldService {
       }
 
       const page = await query.executePaginated();
-      workOrders.push(...page.items);
+      workOrders.push(...page.items.map(toWorkOrder));
       cursor = page.endCursor ?? null;
       hasNextPage = page.hasNextPage;
     }
@@ -375,7 +416,7 @@ export class RayfinFieldService implements IFieldService {
       }
 
       const page = await query.executePaginated();
-      comments.push(...page.items);
+      comments.push(...page.items.map(toWorkOrderComment));
       cursor = page.endCursor ?? null;
       hasNextPage = page.hasNextPage;
     }
@@ -386,7 +427,7 @@ export class RayfinFieldService implements IFieldService {
   async createWorkOrder(input: NewWorkOrderInput): Promise<WorkOrder> {
     const client = getRayfinClient();
     const now = new Date();
-    return client.data.WorkOrder.create({
+    const order = await client.data.WorkOrder.create({
       customer: input.customer,
       address: input.address,
       task: input.task,
@@ -397,6 +438,7 @@ export class RayfinFieldService implements IFieldService {
       createdAt: now,
       updatedAt: now,
     });
+    return this.getWorkOrderById(order.id);
   }
 
   async createWorkOrderComment(
@@ -408,12 +450,13 @@ export class RayfinFieldService implements IFieldService {
     }
 
     const client = getRayfinClient();
-    return client.data.WorkOrderComment.create({
+    const comment = await client.data.WorkOrderComment.create({
       userId: input.userId,
       createdAt: new Date(),
       workOrderId: input.workOrderId,
       content,
     });
+    return toWorkOrderComment(comment);
   }
 
   async assignWorkOrder(
@@ -422,7 +465,7 @@ export class RayfinFieldService implements IFieldService {
   ): Promise<WorkOrder> {
     const client = getRayfinClient();
     if (serviceProId) {
-      return client.data.WorkOrder.update(
+      await client.data.WorkOrder.update(
         { id },
         {
           servicePro_id: serviceProId,
@@ -430,13 +473,14 @@ export class RayfinFieldService implements IFieldService {
           updatedAt: new Date(),
         }
       );
+    } else {
+      await client.data.WorkOrder.update({ id }, {
+        servicePro_id: null,
+        status: 'pending',
+        updatedAt: new Date(),
+      });
     }
-
-    return client.data.WorkOrder.update({ id }, {
-      servicePro_id: null,
-      status: 'pending',
-      updatedAt: new Date(),
-    });
+    return this.getWorkOrderById(id);
   }
 
   async acceptWorkOrder(
@@ -444,7 +488,7 @@ export class RayfinFieldService implements IFieldService {
     serviceProId: string
   ): Promise<WorkOrder> {
     const client = getRayfinClient();
-    return client.data.WorkOrder.update(
+    await client.data.WorkOrder.update(
       { id },
       {
         servicePro_id: serviceProId,
@@ -452,6 +496,7 @@ export class RayfinFieldService implements IFieldService {
         updatedAt: new Date(),
       }
     );
+    return this.getWorkOrderById(id);
   }
 
   async updateWorkOrderStatus(
@@ -459,36 +504,25 @@ export class RayfinFieldService implements IFieldService {
     status: WorkOrderStatus
   ): Promise<WorkOrder> {
     const client = getRayfinClient();
-    return client.data.WorkOrder.update(
+    await client.data.WorkOrder.update(
       { id },
       {
         status,
         updatedAt: new Date(),
       }
     );
+    return this.getWorkOrderById(id);
   }
 
-  private async clearAllData(): Promise<void> {
-    const client = getRayfinClient();
-    const [workOrders, servicePros, comments] = await Promise.all([
-      this.getWorkOrders(),
-      this.getServicePros(),
-      this.getCommentsByFilter(),
-    ]);
-
-    await runInBatches(
-      comments,
-      comment => client.data.WorkOrderComment.delete({ id: comment.id })
-    );
-    await runInBatches(
-      workOrders,
-      (workOrder) => client.data.WorkOrder.delete({ id: workOrder.id })
-    );
-    await runInBatches(
-      servicePros,
-      (servicePro) => client.data.ServicePro.delete({ id: servicePro.id })
-    );
-    this.demoDataChecked = false;
+  private async getWorkOrderById(id: string): Promise<WorkOrder> {
+    const [order] = await getRayfinClient().data.WorkOrder.select(WORK_ORDER_FIELDS)
+      .where({ id: { eq: id } })
+      .first(1)
+      .execute();
+    if (!order) {
+      throw new Error('Saved work order could not be read.');
+    }
+    return toWorkOrder(order);
   }
 
   private async hasWorkOrders(): Promise<boolean> {

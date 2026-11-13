@@ -80,7 +80,7 @@ git config user.email
 
 In the guided VM, these should be configured for the lab account. For a self-paced app project, set missing identity values in that project's Git repository before its first commit. Do not configure another person's identity.
 
-This lab uses the Rayfin `experimental` release channel. The create command in Exercise 2 downloads it; no global Rayfin installation or Docker installation is required for the Fabric-backed path. npm must be able to reach the public npm registry.
+This lab uses Rayfin `^2.0.0`. The create command in Exercise 2 downloads it; no global Rayfin installation or Docker installation is required for the Fabric-backed path. npm must be able to reach the public npm registry.
 
 ## Ready to continue
 
@@ -106,7 +106,7 @@ Prepare and rehearse the following before attendees start:
 | Microsoft access | Assign lab Microsoft accounts and supply the tenant-specific sign-in flow, including any required MFA steps. |
 | Fabric workspaces | Allow the lab accounts to create workspaces and assign them to the lab's supported Fabric capacity. `rayfin up` creates each attendee's workspace (named like `field-services-app-123456`) when they select **Use new workspace**. |
 | Tenant configuration | Enable Fabric Apps and Semantic Model Execute Queries for the lab accounts. Confirm that the intended semantic-model workflow and Build/Read permissions work. |
-| Starter files | Install the pre-comments starter from `template/field-services-app/` to `C:\LabFiles\template\field-services-app` with the [VM update script](../scripts/README.md). Refresh all of its Rayfin packages together on the experimental channel using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify the installed CLI meets the static-hosting minimum of `1.35.1`. The imported completed reference is not a substitute for this starter. |
+| Starter files | Install the pre-comments starter from `template/field-services-app/` to `C:\LabFiles\template\field-services-app` with the [VM update script](../scripts/README.md). Refresh all of its Rayfin packages together within `^2.0.0` using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify that `npx rayfin --version` reports the locked 2.x CLI version. The imported completed reference is not a substitute for this starter. |
 | Skillable instructions | Use LAB690 for the current lab identity. Preserve original-source attribution links, but remove stale lab identifiers from attendee instructions and platform configuration. |
 | Knowledge checks | Rehearse every knowledge check in Skillable with an attendee account and confirm that the intended correct answers validate. The platform questions, answer keys, and validation rules are not stored in this repository and must be corrected in Skillable. |
 | Connectivity | Allow the VM to reach GitHub/Copilot, npm, Microsoft sign-in, Fabric, and the generated Rayfin app endpoints. Verify with the actual lab network policy. |

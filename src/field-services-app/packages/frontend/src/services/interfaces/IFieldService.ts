@@ -1,4 +1,5 @@
 import type { ServicePro, WorkOrder, WorkOrderStatus, WorkOrderComment } from '@field-services/shared';
+import type { BulkCheckpoint, BulkOptions } from '../BulkOperation';
 
 export interface FieldServiceSeedProfile {
   seedId: string;
@@ -47,21 +48,18 @@ export interface NewWorkOrderCommentInput {
   content: string;
 }
 
-export type SeedProgressStage = 'servicePros' | 'workOrders';
-export type SeedProgressCallback = (
-  stage: SeedProgressStage,
-  completed: number,
-  total: number
-) => void;
+export type BulkResult =
+  | { done: false; checkpoint: BulkCheckpoint }
+  | { done: true; checkpoint: BulkCheckpoint; summary: AdminDataSummary };
 
 export interface IFieldService {
   bootstrapDemoData(): Promise<void>;
   getDataSummary(): Promise<AdminDataSummary>;
   restoreSeedData(
     seedData: FieldServiceSeedDataset,
-    onProgress?: SeedProgressCallback
-  ): Promise<AdminDataSummary>;
-  resetDemoData(confirmation: string): Promise<AdminDataSummary>;
+    options: BulkOptions
+  ): Promise<BulkResult>;
+  resetDemoData(confirmation: string, options: BulkOptions): Promise<BulkResult>;
   getServicePros(): Promise<ServicePro[]>;
   getMyProfile(userId: string): Promise<ServicePro | null>;
   createProfile(userId: string, name: string, skills: string): Promise<ServicePro>;

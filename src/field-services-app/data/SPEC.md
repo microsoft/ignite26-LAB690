@@ -1,6 +1,6 @@
 # Specification for Field Services App
 
-This is the initial prompt used to create the Field Services App template. For this lab, use the experimental channel with `npm create @microsoft/rayfin@experimental`.
+This is the initial prompt used to create the Field Services App template. For this lab, use `npm create @microsoft/rayfin@^2.0.0`.
 
 ## Initial prompt
 

@@ -28,8 +28,8 @@
     "description": "Field Services application with authentication, data persistence and Rayfin integration."
   },
   "devDependencies": {
-    "@microsoft/rayfin-cli": "experimental",
-    "@microsoft/rayfin-mcp": "experimental",
+    "@microsoft/rayfin-cli": "^2.0.0",
+    "@microsoft/rayfin-mcp": "^2.0.0",
     "typescript": "^5.8.3"
   }
 }

@@ -21,22 +21,22 @@ Use these for code examples, API details, and troubleshooting — not this skill
 
 **Direct file access** (same content the MCP indexes):
 
-- In a Rayfin project: `node_modules/@microsoft/rayfin-mcp/assets/docs/guide/`
-- If the docs package isn't installed, install it: `npm install --save-dev @microsoft/rayfin-mcp@experimental`, then re-run the MCP queries above.
+- In a Rayfin project: `node_modules/@microsoft/rayfin-guide/assets/docs/`
+- If the MCP package isn't installed, install it: `npm install --save-dev @microsoft/rayfin-mcp@^2.0.0`, then re-run the MCP queries above.
 
 Key doc files:
 
-- `guide/known-limitations.md` — FK naming, constraint limits, relationship rules
-- `guide/data/permissions.md` — `@role` decorator, policy DSL, field visibility
-- `guide/data/graphql.md` — RayfinClient setup, query chain, mutations
-- `guide/auth/overview.md` — auth methods, session handling
-- `guide/deploy/index.md` — Fabric deployment workflow
+- `known-limitations.md` — FK naming, constraint limits, relationship rules
+- `data/permissions.md` — `@role` decorator, policy DSL, field visibility
+- `data/graphql.md` — RayfinClient setup, query chain, mutations
+- `auth/overview.md` — auth methods, session handling
+- `app-backend/deploy.md` — Fabric deployment workflow
 
 **Before creating entities or writing queries**, check known limitations:
 
 ```text
 search_docs(query: 'known limitations', module: 'guide')
-# or: view node_modules/@microsoft/rayfin-mcp/assets/docs/guide/known-limitations.md
+# or: view node_modules/@microsoft/rayfin-guide/assets/docs/known-limitations.md
 ```
 
 ## Rules
@@ -47,7 +47,8 @@ search_docs(query: 'known limitations', module: 'guide')
 - Include `ESNext.Decorators` in the tsconfig `lib` array.
 - `rayfin dev` defaults to Fabric-backed development. Docker is an optional preview provider, not a prerequisite for this lab.
 - Two deployment targets: Rayfin Local (Docker, MSSQL or PostgreSQL) and Fabric Apps (managed, MSSQL only).
-- Use `npm create @microsoft/rayfin@experimental` for new projects in this lab. Keep all Rayfin dependencies on the experimental channel; `npx rayfin` below uses the project's installed experimental CLI.
+- Use `npm create @microsoft/rayfin@^2.0.0` for new projects in this lab. Keep all Rayfin dependencies on `^2.0.0` and update them together; `npx rayfin` below uses the project's installed CLI.
+- Compose clients with `RayfinClient.create`, `browserSession` from `@microsoft/rayfin-auth`, and `dataService` from `@microsoft/rayfin-data`. Infer the client type from the factory; do not use the removed client constructors. Register connectors through `connectorsService` on the same client.
 
 ### Security
 
@@ -74,7 +75,8 @@ search_docs(query: 'known limitations', module: 'guide')
 ### Querying
 
 - Query chain: `.select()` → `.where()` → `.orderBy()` → `.execute()`.
-- Single record by ID: `client.data.Entity.findById('uuid-here')` — not `findByPk`.
+- Single record reads needing more than the primary key must use `.select([...]).where({ id: { eq: id } }).first(1).execute()`; `findById`, `findFirst`, and `findMany` guarantee only the primary key.
+- Data reads return only selected fields. Convert `Date | string` and boolean wire strings explicitly; re-read complete records after mutations that return partial fields.
 - Filter by FK columns using `{property}_id` (e.g., `customer_id`), not dot-path (e.g., `customer.id`).
 - Dot-paths are for `.select()` only (e.g., `customer.companyName`).
 - Use `.first(n).executePaginated()` for cursor-based pagination.
@@ -107,7 +109,7 @@ search_docs(query: 'known limitations', module: 'guide')
 
 ```bash
 # Scaffold
-npm create @microsoft/rayfin@experimental <name>   # Create from template
+npm create @microsoft/rayfin@^2.0.0 <name>      # Create from template
 npx rayfin init [directory]                   # Interactive setup
 
 # Local dev

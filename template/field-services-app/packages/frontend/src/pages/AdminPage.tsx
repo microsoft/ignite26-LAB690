@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeftIcon,
@@ -14,23 +14,12 @@ import { Button } from '@/components/ui/button';
 import type {
   AdminDataSummary,
   FieldServiceSeedDataset,
-  SeedProgressStage,
 } from '@/services/interfaces/IFieldService';
+import { useBulkOperation } from '@/hooks/useBulkOperation';
 import { ServiceContainer } from '@/services/ServiceContainer';
 import { getRayfinClient } from '@/services/rayfin/RayfinClientService';
 
 type AdminAction = 'seed' | 'reset' | null;
-
-type SeedProgress = {
-  stage: SeedProgressStage;
-  completed: number;
-  total: number;
-};
-
-const STAGE_LABELS: Record<SeedProgressStage, string> = {
-  servicePros: 'Restoring missing Service Pros',
-  workOrders: 'Restoring missing work orders',
-};
 
 const fieldServiceSeed: FieldServiceSeedDataset = {
   ...seedData,
@@ -47,10 +36,11 @@ const fieldServiceSeed: FieldServiceSeedDataset = {
 export function AdminPage() {
   const fieldService = ServiceContainer.getInstance().fieldService;
   const [summary, setSummary] = useState<AdminDataSummary | null>(null);
-  const [activeAction, setActiveAction] = useState<AdminAction>(null);
+  const bulk = useBulkOperation(fieldService, fieldServiceSeed);
+  const { activeAction, checkpoint } = bulk;
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [seedProgress, setSeedProgress] = useState<SeedProgress | null>(null);
+  const summaryRequest = useRef(0);
   const [confirmation, setConfirmation] = useState('');
   const { itemId, workspaceId } = getRayfinClient().runtimeConfig ?? {};
   const resetConfirmation = itemId ? `RESET ${itemId}` : '';
@@ -65,12 +55,14 @@ export function AdminPage() {
   );
 
   const loadSummary = useCallback(async () => {
+    const request = ++summaryRequest.current;
     setError(null);
     try {
-      setSummary(await fieldService.getDataSummary());
+      const current = await fieldService.getDataSummary();
+      if (request === summaryRequest.current) setSummary(current);
     } catch (err) {
       console.error('Failed to load admin data summary:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load DB summary.');
+      if (request === summaryRequest.current) setError(err instanceof Error ? err.message : 'Failed to load DB summary.');
     }
   }, [fieldService]);
 
@@ -79,21 +71,14 @@ export function AdminPage() {
   }, [loadSummary]);
 
   const runAdminAction = async (action: Exclude<AdminAction, null>) => {
-    setActiveAction(action);
+    summaryRequest.current++;
+    setSummary(null);
     setError(null);
     setMessage(null);
-    setSeedProgress(null);
 
-    try {
-      const nextSummary =
-        action === 'seed'
-          ? await fieldService.restoreSeedData(
-              fieldServiceSeed,
-              (stage, completed, total) =>
-                setSeedProgress({ stage, completed, total })
-            )
-          : await fieldService.resetDemoData(confirmation);
-
+    const nextSummary = await bulk.run(action, confirmation);
+    if (action === 'reset') setConfirmation('');
+    if (nextSummary) {
       setSummary(nextSummary);
       setMessage(
         action === 'seed'
@@ -101,14 +86,8 @@ export function AdminPage() {
           : 'Reset complete: all work orders and Service Pro profiles in this app were removed; one unassigned example work order was recreated.'
       );
       setConfirmation('');
-    } catch (err) {
-      console.error(`Failed to ${action} admin data:`, err);
-      setError(
-        err instanceof Error ? err.message : `Failed to ${action} admin data.`
-      );
-    } finally {
-      setActiveAction(null);
-      setSeedProgress(null);
+    } else {
+      await loadSummary();
     }
   };
 
@@ -146,9 +125,9 @@ export function AdminPage() {
           <div><dt className="font-semibold">Fabric workspace ID</dt><dd>{workspaceId ?? 'Unavailable'}</dd></div>
           <div><dt className="font-semibold">Fabric app item ID</dt><dd>{itemId ?? 'Unavailable'}</dd></div>
         </dl>
-        {error && (
+        {(bulk.error || error) && (
           <Alert variant="destructive" role="alert">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{bulk.error || error}</AlertDescription>
           </Alert>
         )}
         {message && (
@@ -156,30 +135,33 @@ export function AdminPage() {
             <AlertDescription>{message}</AlertDescription>
           </Alert>
         )}
-        {activeAction === 'seed' && seedProgress && (
-          <Alert>
+        {(checkpoint || bulk.invalidCheckpoint || activeAction) && (
+          <Alert role="status">
             <AlertDescription>
-              <div className="flex w-full flex-col gap-2">
-                <div className="flex w-full items-center justify-between gap-4 text-sm font-medium">
-                  <span>{STAGE_LABELS[seedProgress.stage]}</span>
-                  <span className="tabular-nums text-slate-600">
-                    {seedProgress.completed} / {seedProgress.total}
-                  </span>
+              <div className="flex w-full flex-col gap-3">
+                {checkpoint && <>
+                  <p>
+                    {checkpoint.action === 'seed' ? 'Restore' : 'Reset'}: {checkpoint.nextIndex} / {checkpoint.targets.length} operations checkpointed.
+                    {' '}Resume at {checkpoint.targets[checkpoint.nextIndex]?.entity ?? 'final verification'}.
+                    {' '}{activeAction ? 'Running; progress is saved automatically.' : 'Paused; resume when ready.'}
+                  </p>
+                  <progress aria-label="Bulk operation progress" className="w-full" max={checkpoint.targets.length} value={checkpoint.nextIndex} />
+                </>}
+                {!checkpoint && activeAction && <p>Preparing {activeAction === 'seed' ? 'restore' : 'reset'}.</p>}
+                {bulk.retrying && <p>A request timed out or was throttled. Retrying automatically with backoff; no records are skipped. You can pause while waiting.</p>}
+                <p>Browser chunks stop starting new batches after 20 seconds. In-flight requests and final verification can take longer. Saved progress stays in this browser for this app and account.</p>
+                <div className="flex flex-wrap gap-3">
+                  {activeAction ? (
+                    <Button onClick={bulk.pause}>Pause after current batch</Button>
+                  ) : <>
+                    {checkpoint && <Button
+                      disabled={!bulk.ready || (checkpoint.action === 'reset' && confirmation !== resetConfirmation)}
+                      onClick={() => void runAdminAction(checkpoint.action)}
+                    >Resume {checkpoint.action === 'seed' ? 'restore' : 'reset'}</Button>}
+                    <Button variant="outline" onClick={() => void bulk.discard()}>Discard checkpoint</Button>
+                  </>}
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-emerald-500 transition-all"
-                    style={{
-                      width: `${
-                        seedProgress.total > 0
-                          ? Math.round(
-                              (seedProgress.completed / seedProgress.total) * 100
-                            )
-                          : 0
-                      }%`,
-                    }}
-                  />
-                </div>
+                <p>Discarding progress does not undo changes already made. Resuming a reset requires typing the app confirmation again.</p>
               </div>
             </AlertDescription>
           </Alert>
@@ -224,7 +206,7 @@ export function AdminPage() {
             </div>
             <Button
               className="mt-6"
-              disabled={activeAction !== null}
+              disabled={activeAction !== null || !bulk.ready || checkpoint !== null}
               onClick={() => void runAdminAction('seed')}
             >
               {activeAction === 'seed' ? (
@@ -267,7 +249,7 @@ export function AdminPage() {
             </label>
             <Button
               className="mt-6"
-              disabled={activeAction !== null || !resetConfirmation || confirmation !== resetConfirmation}
+              disabled={activeAction !== null || !bulk.ready || checkpoint !== null || !resetConfirmation || confirmation !== resetConfirmation}
               variant="destructive"
               onClick={() => void runAdminAction('reset')}
             >

@@ -1,6 +1,6 @@
 # Exercise 5: Verify the production deployment
 
-The `npx rayfin up` command uses the project's installed experimental CLI to provision and update the deployment associated with your Fabric workspace. In this exercise, verify the hosted app and inspect the items created for it.
+The `npx rayfin up` command uses the project's installed 2.x CLI to provision and update the deployment associated with your Fabric workspace. In this exercise, verify the hosted app and inspect the items created for it.
 
 ## Task 1: Open the hosted app
 
