@@ -88,6 +88,8 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
 
 1. When prompted with "Do you trust the files in this folder?", select **Yes, and remember this folder for future sessions** by navigating with the arrow keys and pressing Enter.
 
+1. In the Copilot CLI, run `/update` to update to the latest version.
+
 1. Run the following command in the Copilot CLI to start the login process: `/login`.
 
 1. When prompted to choose a sign-in method, select **Github.com**.
@@ -95,8 +97,6 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
 1. Press any key to open the browser and sign in using the SSO session from Task 2. The device code is copied to your clipboard automatically, so paste it into the browser when asked.
 
 1. After a successful sign-in, return to the terminal and confirm that you see "Signed in successfully" in the output.
-
-1. *(Optional)*  If the Copilot CLI prompts you that an update is available, run: `/update` to update to the latest version.
 
 1. Exit the Copilot CLI by running: `/exit`. You will start it again in the next exercise when you use it to generate code.
 

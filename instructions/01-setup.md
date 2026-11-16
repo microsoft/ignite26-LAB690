@@ -49,9 +49,10 @@ Clone this repository and open it in Visual Studio Code. Exercise 2 creates a se
 
 1. Open a new browser tab. For the guided session, sign in with the lab-provided GitHub account using the sign-in instructions supplied with the lab. For self-paced learning, use your own account with Copilot access.
 2. Open a terminal and run `copilot`.
-3. If prompted to sign in, run `/login` and complete the browser flow.
-4. Confirm the CLI reports that you are signed in with the intended account and can submit a prompt. If access is denied, resolve the account's Copilot entitlement before continuing.
-5. Exit with `/exit`.
+3. In the Copilot CLI, run `/update` to update to the latest version.
+4. Run `/login` and complete the browser flow.
+5. Confirm the CLI reports that you are signed in with the intended account and can submit a prompt. If access is denied, resolve the account's Copilot entitlement before continuing.
+6. Exit with `/exit`.
 
 The GitHub account authorizes Copilot; the Microsoft account authorizes Fabric. Signing in to one does not sign you in to the other. When Rayfin later requests Microsoft sign-in, use the same Microsoft account and tenant you used for Fabric.
 
