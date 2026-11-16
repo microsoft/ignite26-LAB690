@@ -1,12 +1,26 @@
-import { RayfinClient, resolveRayfinConfig } from '@microsoft/rayfin-client';
+import { RayfinClient, resolveRayfinConfig, type RayfinRuntimeConfig } from '@microsoft/rayfin-client';
+import { browserSession } from '@microsoft/rayfin-auth';
+import { dataService } from '@microsoft/rayfin-data';
 import type { FieldServiceSchema } from '@field-services/shared';
+
+function createClient(baseUrl: string, publishableKey: string, runtimeConfig: RayfinRuntimeConfig) {
+  return RayfinClient.create({
+    baseUrl,
+    publishableKey,
+    runtimeConfig,
+    auth: browserSession({ storage: true }),
+    services: { data: dataService<FieldServiceSchema>() },
+  });
+}
+
+type FieldServiceClient = ReturnType<typeof createClient>;
 
 /**
  * A singleton service that manages the RayfinClient instance
  */
 export class RayfinClientService {
   private static instance: RayfinClientService | null = null;
-  private _client: RayfinClient<FieldServiceSchema> | null = null;
+  private _client: FieldServiceClient | null = null;
 
   private constructor() {}
 
@@ -20,7 +34,7 @@ export class RayfinClientService {
     return RayfinClientService.instance;
   }
 
-  public async initialize(): Promise<RayfinClient<FieldServiceSchema>> {
+  public async initialize(): Promise<FieldServiceClient> {
     if (!this._client) {
       const resolved = await resolveRayfinConfig({
         apiUrl: import.meta.env.VITE_RAYFIN_API_URL,
@@ -29,18 +43,17 @@ export class RayfinClientService {
         itemId: import.meta.env.VITE_FABRIC_ITEM_ID,
         portalUrl: import.meta.env.VITE_FABRIC_PORTAL_URL,
       });
-      if (!resolved.baseUrl || !resolved.publishableKey) {
+      if (typeof resolved.baseUrl !== 'string' || !resolved.publishableKey?.trim()) {
         throw new Error(
           'Rayfin configuration is incomplete. Deploy with npm run rayfin:up, then restart npm run dev.'
         );
       }
 
-      this._client = new RayfinClient<FieldServiceSchema>({
-        baseUrl: resolved.baseUrl,
-        publishableKey: resolved.publishableKey,
-        runtimeConfig: resolved.runtimeConfig,
-        authStorage: true,
-      });
+      this._client = createClient(
+        resolved.baseUrl,
+        resolved.publishableKey,
+        resolved.runtimeConfig
+      );
     }
 
     return this._client;
@@ -50,7 +63,7 @@ export class RayfinClientService {
    * Get the RayfinClient instance
    * @throws Error if the client is not initialized
    */
-  public getClient(): RayfinClient<FieldServiceSchema> {
+  public getClient(): FieldServiceClient {
     if (!this._client) {
       throw new Error('RayfinClient not initialized. Call initialize() first.');
     }
@@ -68,6 +81,7 @@ export class RayfinClientService {
    * Reset the singleton instance (useful for testing)
    */
   public static reset(): void {
+    RayfinClientService.instance?._client?.dispose();
     RayfinClientService.instance = null;
   }
 }
@@ -76,6 +90,6 @@ export class RayfinClientService {
  * Helper function to get the RayfinClient instance
  * @throws Error if the client is not initialized
  */
-export function getRayfinClient(): RayfinClient<FieldServiceSchema> {
+export function getRayfinClient(): FieldServiceClient {
   return RayfinClientService.getInstance().getClient();
 }

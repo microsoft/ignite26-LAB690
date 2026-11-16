@@ -23,8 +23,8 @@ export interface WorkOrder {
   scheduledAt: Date;
   status: WorkOrderStatus;
   servicePro_id?: string | null;
-  servicePro?: ServicePro;
-  note?: string;
+  servicePro?: Pick<ServicePro, 'name' | 'skills'> | null;
+  note?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +39,6 @@ export interface WorkOrderComment {
 
 export type FieldServiceSchema = {
   ServicePro: ServicePro;
-  WorkOrder: WorkOrder;
+  WorkOrder: Omit<WorkOrder, 'servicePro'> & { servicePro?: ServicePro | null };
   WorkOrderComment: WorkOrderComment;
 };

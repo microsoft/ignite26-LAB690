@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@field-services/shared": "*",
-    "@microsoft/rayfin-core": "experimental"
+    "@microsoft/rayfin-core": "^2.0.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

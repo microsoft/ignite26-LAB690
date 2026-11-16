@@ -20,7 +20,9 @@ Ask Copilot CLI to implement a comments feature with a prompt such as:
 ```text
 Implement a comments feature for work orders. Comments should provide a history of interventions so service pros and the manager can communicate about a work order. Each comment must include an id, userId, createdAt, workOrderId, and content. Keep the comments section collapsed by default. Let the attendee add comments from the assigned service-pro experience and reply from the manager experience using the same signed-in account. These are switchable demonstration views, not independently authorized roles. Preserve authenticated backend access; do not treat the view switch as authorization or add a second account requirement. Generate the code, but do not apply the backend schema change yet.
 
-Use Rayfin's experimental release channel for any Rayfin commands or package additions. Keep Rayfin dependencies version-matched; do not switch to latest or stable.
+Use ^2.0.0 for Rayfin package additions and @^2.0.0 in every npm create command, rather than latest or prerelease tags. Use the project's installed CLI and keep participating Rayfin packages version-matched.
+
+Preserve the existing RayfinClient.create composition with browserSession and dataService. Select every field the comments UI needs, convert wire dates at the service boundary, and do not treat partial mutation responses as complete records.
 ```
 
 Review the plan and generated changes. Look for:
@@ -54,7 +56,7 @@ Before updating the backend, inspect the changed files in Visual Studio Code's S
 
 ## Task 6: Validate the comments workflow
 
-1. Start the local app with `npm run dev`.
+1. Start the local app with `npx rayfin dev --workspace "<workspace-name>"`, using the display name you recorded in Exercise 1.
 2. Open a work order assigned to your service-pro profile and add a comment.
 3. Select **Manager** and confirm you can see and reply to the thread using the same signed-in account.
 4. Select **Jobs** and confirm the reply appears. Reload the page and reopen the collapsed comments section to confirm persistence.

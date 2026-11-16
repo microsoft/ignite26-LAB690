@@ -2,7 +2,7 @@
 
 Rayfin app for field operations: managers create and assign work orders, Service Pros accept jobs and mark them complete.
 
-This is the starter template for Ignite 2026 LAB690, adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app). During the lab, you add work-order comments and a semantic-model dashboard to it. Rayfin packages use the `experimental` release channel; `npx rayfin` and the npm scripts below use the project's installed experimental CLI.
+This is the starter template for Ignite 2026 LAB690, adapted from the [original Build 2026 sample](https://github.com/microsoft/Build26-LAB514-ship-ai-apps-fast-with-a-managed-backend-in-microsoft-fabric/tree/92ccdaa/src/field-services-app). During the lab, you add work-order comments and a semantic-model dashboard to it. Rayfin packages use `^2.0.0`; `npx rayfin` and the npm scripts below use the project's installed CLI.
 
 ## Profiles
 
@@ -38,7 +38,9 @@ One unassigned example work order is seeded on first load when no work orders ex
 The authenticated route `/_admin/` provides two distinct operations. These are demo tools for the signed-in lab account, not a separately authorized administrator role:
 
 - **Restore sample data** adds only missing baseline records. Stable UUIDs derived from each seed key make retries repeatable. Existing profiles, work orders, assignments, and edits are not overwritten or deleted.
-- **Reset app data** permanently removes all work orders and Service Pro profiles in the current app, then recreates the initial unassigned job. The UI shows the workspace/app IDs and requires typing `RESET <current-app-item-id>`. It never deletes Fabric items, workspaces, or capacity. Close other tabs using this app and keep this page open until completion; clearing the full dataset can take several minutes. This is not a transaction: if interrupted, inspect the current app totals and any reported error, then retry only after confirming the target again.
+- **Reset app data** permanently removes all work orders and Service Pro profiles in the current app, then recreates the initial unassigned job. The UI shows the workspace/app IDs and requires typing `RESET <current-app-item-id>`, including when resuming after interruption. It never deletes Fabric items, workspaces, or capacity. Close other tabs using this app; clearing the full dataset can take several minutes. This is not a transaction.
+
+Both operations run in browser-side chunks, without enabling backend Functions. A chunk stops starting new five-record batches after 20 seconds; in-flight SDK requests, reset inventory reads, and final verification can take longer. Confirmed progress is saved in local storage, scoped to the workspace, app, and signed-in account. Request timeouts and HTTP 408, 429, and 504 responses retry automatically from saved progress, with exponential backoff from 2 to 30 seconds or a longer server-requested Retry-After delay. Retries continue until completion or pause; the page shows when it is waiting. Uncertain writes are checked against the database before retrying, not skipped. Other errors, including mixed timeout/non-timeout failures, stop visibly. Select **Pause after current batch** to stop (also while waiting to retry), then **Resume restore** or **Resume reset** to continue after pause, reload, or other errors. Web Locks prevent competing admin operations in tabs sharing the same browser origin; they do not coordinate other browsers or devices. **Discard checkpoint** only forgets progress; it does not undo writes. Restore checkpoints are rejected if the seed dataset changes.
 
 Entities allow authenticated access so the lab account can reset the demo. This is not a production manager/service-pro authorization model; production would enforce identity-based policies and controlled maintenance access server-side.
 
@@ -70,19 +72,21 @@ Generation defaults to the fixed end date and reproduces the checked-in JSON byt
 npm install
 npx rayfin login
 npm run rayfin:up -- --workspace <your-workspace> --item-name <your-app-name>
-npm run dev
+npm run dev -- --workspace "<your-workspace>"
 ```
 
-Deployment is explicit; `npm run dev` only regenerates frontend environment configuration and starts Vite against the selected backend. Docker is not required.
+`npm run dev` runs `rayfin dev`: it provisions a missing Fabric backend, applies the schema, generates frontend environment configuration, and starts the loopback Vite frontend. `--workspace` takes the Fabric workspace display name. Static frontend publishing remains explicit through `rayfin up`. Docker is not required.
 
 ## Update Rayfin packages
 
-The checked-in lockfile resolves all `@microsoft/rayfin-*` packages to `1.37.0-alpha.2159`, the current experimental release at the time of this update. This is newer than the `1.35.1` minimum reported by static hosting. Keep the manifests on `experimental` for now; a separate update to the GA release is still required before the lab is delivered.
+The checked-in lockfile resolves all `@microsoft/rayfin-*` packages to `2.0.0`. Keep the manifests on `^2.0.0` and update participating packages together. Project creation uses `npm create @microsoft/rayfin@^2.0.0`, not a moving release-channel tag.
 
-From this app directory, refresh the CLI, MCP server, SDK, and local-development plugin together:
+Agent guidance starts in [AGENTS.md](AGENTS.md). The root development dependency `@microsoft/rayfin-guide@^2.0.0` makes version-matched CLI and service documentation available under `node_modules`; follow each package's `rayfinDocs` metadata for SDK documentation. The pinned [.mcp.json](.mcp.json) provides optional documentation-tool access. Functions and Storage guidance is opt-in only; both services remain disabled.
+
+From this app directory, refresh the CLI, guide, MCP server, SDK, and local-development plugin together:
 
 ```shell
-npm update --workspaces --include-workspace-root @microsoft/rayfin-cli @microsoft/rayfin-mcp @microsoft/rayfin-auth-provider-fabric @microsoft/rayfin-client @microsoft/rayfin-core @microsoft/rayfin-local-dev
+npm update --workspaces --include-workspace-root @microsoft/rayfin-cli @microsoft/rayfin-guide @microsoft/rayfin-mcp @microsoft/rayfin-auth @microsoft/rayfin-auth-provider-fabric @microsoft/rayfin-client @microsoft/rayfin-data @microsoft/rayfin-core @microsoft/rayfin-local-dev
 npx rayfin --version
 ```
 
@@ -94,13 +98,16 @@ Vite's `rayfinLocalDev({ autoLogin: true })` plugin serves runtime configuration
 
 The backend requires `services.auth.fabric.externalEntraExchange: true`; redeploy after changing it. Deployed authentication continues to use the Fabric SDK. Both environments use `resolveRayfinConfig`, not a hard-coded backend URL.
 
+The client uses `RayfinClient.create` with `browserSession({ storage: true })` and `dataService<FieldServiceSchema>()`. Explicit selections describe the fields the UI receives, including only the assigned Service Pro's name and skills. The data service converts wire dates to `Date` and re-reads saved work orders and updated profiles instead of returning partial mutation responses as complete records. Resetting the service container disposes the client without signing out.
+
 The generated frontend environment file is `packages/frontend/.env.local`. Do not copy credentials into it or commit it. Keep the dev server on loopback and use the URL Vite prints; its port follows the CLI-generated `VITE_PORT`. If authentication fails, the sign-in page displays the error. Check the CLI account, deployment, and external-exchange setting before retrying.
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` / `npm run dev:frontend` | Generate environment configuration and start the loopback Vite frontend against the selected backend |
+| `npm run dev` | Start a CLI-managed Fabric development session, applying backend state and starting the local frontend |
+| `npm run dev:frontend` | Generate environment configuration and start only the loopback Vite frontend against the selected backend |
 | `npm run dev:fabric` | Compatibility alias for `dev:frontend` |
 | `npm run build` | Type-check and build |
 | `npm run typecheck` | Check TypeScript project references |
@@ -108,5 +115,5 @@ The generated frontend environment file is `packages/frontend/.env.local`. Do no
 | `npm run seed:generate` | Generate large Field Services seed JSON |
 | `npm run seed:validate` | Validate generated seed JSON |
 | `npm run rayfin:up -- --workspace <name> --item-name <name>` | Deploy the backend, schema, and static frontend to the selected Fabric app |
-| `npm run rayfin:dev` | Start a CLI-managed development session; Fabric is the default provider |
+| `npm run rayfin:dev` | Compatibility alias for `dev` |
 | `npm run rayfin:db` | Apply schema to the current development session |

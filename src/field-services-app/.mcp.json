@@ -3,7 +3,7 @@
     "rayfin": {
       "args": [
         "-y",
-        "@microsoft/rayfin-mcp@experimental",
+        "@microsoft/rayfin-mcp@^2.0.0",
         "start"
       ],
       "command": "npx",
