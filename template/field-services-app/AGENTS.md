@@ -16,6 +16,17 @@ The primary development path uses a Fabric backend and integrated Microsoft auth
 - Development session: `npm run dev -- --workspace "<name>"`
 - Do not install dependencies separately inside workspace packages.
 
+## Agent workflow
+
+- Read [Rayfin guidance](.agents/skills/rayfin/SKILL.md) before changing Rayfin code. Installed package documentation is authoritative: inspect the owning package's `package.json`, follow `rayfinDocs.dir`, read `index.md`, then the relevant page. CLI documentation comes from the directly installed `@microsoft/rayfin-guide`.
+- Verify the intended source, workspace/item identity, schema, query shape, and real results before consuming source-backed data. Never invent identifiers or silently substitute sample data; the existing labelled demo seed is not a fallback for a missing source.
+- Surface actionable configuration, sign-in, permission, and query errors rather than permanent loading states. Bound transient retries for new source integrations; preserve the explicitly documented seed/reset retry behavior below.
+- Install from this app's npm workspace root, declare dependencies in the owning package, and maintain one root lockfile. Do not race installers or builds that share TypeScript outputs.
+- Use [app-validation](.agents/skills/app-validation/SKILL.md) for targeted checks and applicable final checks. Build/CLI success does not prove browser behavior or persisted writes.
+- Read [app-deployment](.agents/skills/app-deployment/SKILL.md) before remote writes. Confirm the workspace/item and preview with the installed CLI; `npm run dev` also applies remote backend state.
+- For existing Fabric sources use [rayfin-connectors](.agents/skills/rayfin-connectors/SKILL.md); for semantic queries also use [dax-authoring](.agents/skills/dax-authoring/SKILL.md) and [query-design](.agents/skills/query-design/SKILL.md).
+- Functions and Storage remain disabled. Only when explicitly requested, follow [rayfin-functions](.agents/skills/rayfin-functions/SKILL.md) or [rayfin-storage](.agents/skills/rayfin-storage/SKILL.md) for opt-in setup, permissions, integration, and validation. Guidance presence does not authorize service enablement or deployment.
+
 ## Common commands
 
 | Command | Description |
