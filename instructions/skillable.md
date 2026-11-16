@@ -50,7 +50,7 @@ This lab uses a pre-configured virtual machine with all necessary tools installe
 - Visual Studio Code
 - GitHub Copilot CLI
 
-## Task 1: Sign in to Microsoft Fabric
+## Task 1: Sign in to Microsoft Fabric and create a workspace
 
 1. In the virtual machine, open Microsoft Edge and navigate to the Microsoft Fabric portal at: `https://app.fabric.microsoft.com`.
 
@@ -63,6 +63,17 @@ This lab uses a pre-configured virtual machine with all necessary tools installe
 
     > [!Important]
     > If the page title and icon in the bottom left corner of the page say "Power BI", you need to switch to the Fabric portal. Click on the **Power BI** icon in the bottom left corner, then select **Fabric** to switch to the Microsoft Fabric portal.
+
+1. In the Fabric portal, select **Workspaces**, then **+ New workspace**.
+
+1. Enter a unique workspace name, such as `field-services-app-<unique-suffix>`, replacing `<unique-suffix>` with a value unique to you.
+
+1. In the workspace's advanced settings, select the supported Fabric capacity supplied for the lab, then select **Apply**.
+
+    > [!IMPORTANT]
+    > If workspace creation or capacity selection fails, contact the instructor before continuing. Do not start a Fabric trial or use a personal subscription.
+
+1. Confirm that the new workspace opens and record its exact display name. Replace `<workspace-name>` in later commands with this value, keeping the quotation marks. Use the display name, not the workspace URL or GUID.
 
 ## Task 2: Sign in to GitHub through the lab SSO portal
 
@@ -134,20 +145,22 @@ The template handles the setup for you, so you can focus on the lab.
 
 ## Task 1: Bootstrap a new Rayfin project from the Field Services template
 
-1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template.
+1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template. Replace `<workspace-name>` with the exact Fabric workspace display name you recorded in Exercise 1.
 
     ```shell
-    npm create -y @microsoft/rayfin@^2.0.0 -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app"
+    npm create -y @microsoft/rayfin@^2.0.0 -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace "<workspace-name>"
     ```
 
     The CLI will then:
     - Create a new folder called **field-services-app** in your current directory.
     - Copy the template files into a new **field-services-app** folder.
-    - Wire the project to your Fabric workspace using the `--workspace-uri` you provided.
+    - Record your Fabric workspace display name for later CLI commands.
     - Run `npm install` in the new project folder to pull dependencies (this can take a couple of minutes on first run).
 
     > [!Note]
     > This lab uses Rayfin **^2.0.0**. Use `@^2.0.0` in every `npm create` command and `^2.0.0` for Rayfin package additions, and keep Rayfin packages version-matched. Inside the generated project, use `npx rayfin` to run the installed CLI.
+
+    The create command does not provision the Fabric backend. You will do that with `npx rayfin dev` in Exercise 4.
 
 1. While the install is running, open the **data** folder at **C:\LabFiles\template\field-services-app** to see the original prompt and dataset used to generate this template. This will give you a better understanding of how the app was built and ideas on how to customize it later in the lab.
 
@@ -323,63 +336,51 @@ Continue with **Next →** to run the App locally.
 
 In this exercise, you will run the Field Services app locally.
 
-You will:
-
-- **Provision a Fabric backend** for the app with one command
-- Start the **frontend dev server** locally
+You will **provision a Fabric backend** and start the **frontend dev server** locally with one command.
 
 Then you will sign in, create a Service Pro profile, complete a work order, and test the manager view.
 
 > [!Note]
 > In this lab, you use the same signed-in account to switch between the Service Pro and manager views. Switching views is not an authorization boundary. In a production app, roles would be assigned to authenticated identities and enforced server-side rather than selected by the user.
 
-## Task 1: Provision the Fabric backend
+## Task 1: Start the development session
 
-The **rayfin up** command provisions a managed backend (database, auth, data API) in your Fabric workspace and wires your local frontend to talk to it.
+The **rayfin dev** command provisions a missing managed backend (database, auth, data API) in your Fabric workspace, applies your schema, and starts the frontend locally. It does not publish the static frontend; you will do that in Exercise 5.
 
 1. Use the VS Code terminal from the previous exercise. It should already be in the **field-services-app** folder.
 
-1. Provision the Fabric backend by running:
+1. Start the development session by running the following command. Replace `<workspace-name>` with the exact display name you recorded in Exercise 1:
 
     ```shell
-    npx rayfin up
+    npx rayfin dev --workspace "<workspace-name>"
     ```
 
     > [!IMPORTANT]
     > Rayfin tool may report an error like **Login failed: OS keychain is not available and plaintext token storage is not enabled.** because of the VM environment. If you run into this, run `$env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"` in the terminal to enable plaintext token storage for the current session, then retry the command.
 
-1. When asked to choose a Fabric workspace for the deployment, select **Use new workspace**, then validate the capacity.
-
-1. As this is your first time deploying, the CLI will:
+1. On the first run, the CLI will:
 
     - Open a browser to sign you in to Microsoft Entra. Authentication will be automatic since you already have an active SSO session from Exercise 1.
-    - **Create a Fabric App item** in the workspace you wired up at bootstrap.
+    - **Create a Fabric App item** in the workspace you created in Exercise 1.
     - **Provision a managed SQL database** for your data model.
     - **Apply your schema** to that database.
     - **Generate a publishable key** for the new backend.
     - **Wire your frontend** to the new backend by writing the connection details and key into *packages/frontend/.env.local*.
+    - **Start the local frontend** using the template's Vite development server.
 
 1. Watch the terminal for progress on each step. The first run takes a couple of minutes.
 
-1. When the command finishes, the CLI prints the deployment details, including the backend URL.
+1. Wait for the local frontend URL to appear and leave the command running.
 
 > [!TIP]
-> The CLI saves the deployment details to **rayfin/.deployments.json** so subsequent **rayfin up** runs update the same deployment instead of creating a new one. Keep the generated environment files private and don't commit credentials or keys.
+> The CLI saves the deployment details to **rayfin/.deployments.json** so subsequent **rayfin dev** and **rayfin up** runs reuse the same backend. Keep the generated environment files private and don't commit credentials or keys.
 
 > [!Note]
 > `npx rayfin` uses the project's installed CLI. Check that `npx rayfin --version` reports the locked 2.x version. If an older version appears, ask your lab instructor for help: the template's Rayfin packages must be updated together, and updating a global CLI alone doesn't change the project's version.
 
-## Task 2: Start the frontend
+## Task 2: Open the local frontend
 
-The frontend is the React app that users interact with.
-
-1. In the same terminal, start the Vite dev server:
-
-    ```shell
-    npm run dev
-    ```
-
-    Because **rayfin up** already wrote the backend URL and publishable key into **packages/frontend/.env.local**, Vite picks them up automatically. Your locally-served frontend talks to the freshly provisioned Fabric backend with no extra configuration.
+The frontend is the React app that users interact with. **rayfin dev** has already started it; you do not need to start a separate development server.
 
 1. Copy the local frontend URL shown in the terminal, which should be similar to `http://localhost:5173`, and open it in a new browser tab.
 
@@ -391,7 +392,7 @@ The frontend is the React app that users interact with.
 1. Confirm that the app opens.
 
     > [!Tip]
-    > If automatic sign-in fails, review the error displayed in the app. Check that **rayfin/rayfin.yml** contains `externalEntraExchange: true` under **services > auth > fabric**, and that it was deployed with `npx rayfin up` before retrying.
+    > If automatic sign-in fails, review the error displayed in the app. Check that **rayfin/rayfin.yml** contains `externalEntraExchange: true` under **services > auth > fabric**, then restart `rayfin dev`.
 
 ## Task 3: Sign up as a Service Pro
 
@@ -437,11 +438,11 @@ Continue with **Next →** to deploy the app to production.
 
 ===
 
-# Exercise 5: Verify the Production Deployment on Microsoft Fabric
+# Exercise 5: Deploy and verify the hosted app on Microsoft Fabric
 
-In Exercise 4, you ran **npx rayfin up** to provision the Rayfin backend in Microsoft Fabric. That command also built the frontend by running **npm run build:fabric**, uploaded the compiled app to Microsoft Fabric's managed static hosting, and deployed the schema.
+In Exercise 4, you ran **npx rayfin dev** to provision the Rayfin backend in Microsoft Fabric and run the frontend locally. That command did not publish the static frontend.
 
-In this exercise, you will verify the live deployment created by **rayfin up**. There is no separate production publishing step for this lab: each **rayfin up** updates the deployment associated with your selected Microsoft Fabric workspace.
+In this exercise, you will run **rayfin up** to build and publish the frontend to Microsoft Fabric's managed static hosting, apply any pending backend changes, and verify the live app using the same workspace and backend.
 
 You will:
 
@@ -450,9 +451,17 @@ You will:
 - Confirm that the hosted app uses the same backend, database, and schema as the app you tested locally
 - Optionally inspect the deployed app and SQL Database items in the Microsoft Fabric portal
 
-## Task 1: Open the live app
+## Task 1: Deploy and open the live app
 
-1. In the terminal output from the `npx rayfin up` command you ran in Exercise 4, find the **static hosting URL** printed by the CLI. The URL should look similar to `https://<random-prefix>.webapp.rayfin….com`.
+1. In the **field-services-app** terminal, run the following command. Replace `<workspace-name>` with the exact display name you recorded in Exercise 1:
+
+    ```shell
+    npx rayfin up --workspace "<workspace-name>"
+    ```
+
+1. Wait for the CLI to build and publish the frontend and apply any pending backend changes.
+
+1. In the command output, find the **static hosting URL** printed by the CLI.
 
     !IMAGE[rayfin-up.png](instructions345417/rayfin-up.png)
 
@@ -480,7 +489,7 @@ Let's take a look at the deployed app and database in the Microsoft Fabric porta
 
 1. Open the Microsoft Fabric portal at `https://app.fabric.microsoft.com`.
 
-1. Find the workspace created for the Field Services app deployment in Exercise 4 and open it, should be named something like **field-services-app-123456**.
+1. Open the workspace you created in Exercise 1, using the display name you recorded.
 
 1. Confirm that the workspace contains a **Fabric data app** item and a **SQL Database** item. The **ServicePros** and **WorkOrders** tables are stored in the SQL Database item.
 
@@ -624,10 +633,10 @@ The implementation request asked GitHub Copilot CLI to generate code without app
 
 Test the comments feature from both the local development app and the hosted app.
 
-1. Start the local Vite dev server if it's not already running:
+1. Start the local development session if it's not already running. Replace `<workspace-name>` with the display name you recorded in Exercise 1:
 
     ```shell
-    npm run dev
+    npx rayfin dev --workspace "<workspace-name>"
     ```
 
 1. Open the local app at the Vite dev server URL, such as `http://localhost:5173`.
@@ -759,7 +768,7 @@ By completing this exercise, you will:
 
 A semantic model gives a clean, well-described view of your data - including table relationships, friendly column names, and descriptions - that apps and tools can query consistently.
 
-1. Navigate to the Microsoft Fabric portal and open the workspace that was created for this lab.
+1. Navigate to the Microsoft Fabric portal and open the workspace you created in Exercise 1.
 
 1. Select **+ New item** from the top menu and in the dialog, search and select **Semantic model**.
 
@@ -902,10 +911,10 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
     npx rayfin up
     ```
 
-1. Start the local Vite dev server:
+1. Start the local development session, replacing `<workspace-name>` with the display name you recorded in Exercise 1:
 
     ```shell
-    npm run dev
+    npx rayfin dev --workspace "<workspace-name>"
     ```
 
 1. Open the local app, select **Manager** in the app navigation bar, and open the new dashboard.
