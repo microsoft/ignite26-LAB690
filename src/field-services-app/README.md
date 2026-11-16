@@ -73,10 +73,10 @@ Generation defaults to the fixed end date and reproduces the checked-in JSON byt
 npm install
 npx rayfin login
 npm run rayfin:up -- --workspace <your-workspace> --item-name <your-app-name>
-npm run dev
+npm run dev -- --workspace "<your-workspace>"
 ```
 
-Deployment is explicit; `npm run dev` only regenerates frontend environment configuration and starts Vite against the selected backend. Docker is not required.
+`npm run dev` runs `rayfin dev`: it provisions a missing Fabric backend, applies the schema, generates frontend environment configuration, and starts the loopback Vite frontend. `--workspace` takes the Fabric workspace display name. Static frontend publishing remains explicit through `rayfin up`. Docker is not required.
 
 ## Update Rayfin packages
 
@@ -105,7 +105,8 @@ The generated frontend environment file is `packages/frontend/.env.local`. Do no
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` / `npm run dev:frontend` | Generate environment configuration and start the loopback Vite frontend against the selected backend |
+| `npm run dev` | Start a CLI-managed Fabric development session, applying backend state and starting the local frontend |
+| `npm run dev:frontend` | Generate environment configuration and start only the loopback Vite frontend against the selected backend |
 | `npm run dev:fabric` | Compatibility alias for `dev:frontend` |
 | `npm run build` | Type-check and build |
 | `npm run typecheck` | Check TypeScript project references |
@@ -113,5 +114,5 @@ The generated frontend environment file is `packages/frontend/.env.local`. Do no
 | `npm run seed:generate` | Generate large Field Services seed JSON |
 | `npm run seed:validate` | Validate generated seed JSON |
 | `npm run rayfin:up -- --workspace <name> --item-name <name>` | Deploy the backend, schema, and static frontend to the selected Fabric app |
-| `npm run rayfin:dev` | Start a CLI-managed development session; Fabric is the default provider |
+| `npm run rayfin:dev` | Compatibility alias for `dev` |
 | `npm run rayfin:db` | Apply schema to the current development session |
