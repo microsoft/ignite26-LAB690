@@ -66,14 +66,14 @@ This lab uses a pre-configured virtual machine with all necessary tools installe
 
 1. In the Fabric portal, select **Workspaces**, then **+ New workspace**.
 
-1. Enter a unique workspace name, such as `field-services-app-<unique-suffix>`, replacing `<unique-suffix>` with a value unique to you.
+1. For the workspace name, enter +++field-services-@lab.LabInstance.Id+++.
 
 1. In the workspace's advanced settings, select the supported Fabric capacity supplied for the lab, then select **Apply**.
 
     > [!IMPORTANT]
     > If workspace creation or capacity selection fails, contact the instructor before continuing. Do not start a Fabric trial or use a personal subscription.
 
-1. Confirm that the new workspace opens and record its exact display name. Replace `<workspace-name>` in later commands with this value, keeping the quotation marks. Use the display name, not the workspace URL or GUID.
+1. Confirm that the new workspace opens. Later commands in this lab already include this workspace name.
 
 ## Task 2: Sign in to GitHub through the lab SSO portal
 
@@ -145,10 +145,10 @@ The template handles the setup for you, so you can focus on the lab.
 
 ## Task 1: Bootstrap a new Rayfin project from the Field Services template
 
-1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template. Replace `<workspace-name>` with the exact Fabric workspace display name you recorded in Exercise 1.
+1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template.
 
     ```shell
-    npm create -y @microsoft/rayfin@^2.0.0 -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace "<workspace-name>"
+    npm create -y @microsoft/rayfin@^2.0.0 -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace "field-services-@lab.LabInstance.Id"
     ```
 
     The CLI will then:
@@ -349,10 +349,10 @@ The **rayfin dev** command provisions a missing managed backend (database, auth,
 
 1. Use the VS Code terminal from the previous exercise. It should already be in the **field-services-app** folder.
 
-1. Start the development session by running the following command. Replace `<workspace-name>` with the exact display name you recorded in Exercise 1:
+1. Start the development session by running:
 
     ```shell
-    npx rayfin dev --workspace "<workspace-name>"
+    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
     ```
 
     > [!IMPORTANT]
@@ -453,10 +453,10 @@ You will:
 
 ## Task 1: Deploy and open the live app
 
-1. In the **field-services-app** terminal, run the following command. Replace `<workspace-name>` with the exact display name you recorded in Exercise 1:
+1. In the **field-services-app** terminal, run:
 
     ```shell
-    npx rayfin up --workspace "<workspace-name>"
+    npx rayfin up --workspace "field-services-@lab.LabInstance.Id"
     ```
 
 1. Wait for the CLI to build and publish the frontend and apply any pending backend changes.
@@ -489,7 +489,7 @@ Let's take a look at the deployed app and database in the Microsoft Fabric porta
 
 1. Open the Microsoft Fabric portal at `https://app.fabric.microsoft.com`.
 
-1. Open the workspace you created in Exercise 1, using the display name you recorded.
+1. Open the **field-services-@lab.LabInstance.Id** workspace you created in Exercise 1.
 
 1. Confirm that the workspace contains a **Fabric data app** item and a **SQL Database** item. The **ServicePros** and **WorkOrders** tables are stored in the SQL Database item.
 
@@ -633,10 +633,10 @@ The implementation request asked GitHub Copilot CLI to generate code without app
 
 Test the comments feature from both the local development app and the hosted app.
 
-1. Start the local development session if it's not already running. Replace `<workspace-name>` with the display name you recorded in Exercise 1:
+1. Start the local development session if it's not already running:
 
     ```shell
-    npx rayfin dev --workspace "<workspace-name>"
+    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
     ```
 
 1. Open the local app at the Vite dev server URL, such as `http://localhost:5173`.
@@ -768,7 +768,7 @@ By completing this exercise, you will:
 
 A semantic model gives a clean, well-described view of your data - including table relationships, friendly column names, and descriptions - that apps and tools can query consistently.
 
-1. Navigate to the Microsoft Fabric portal and open the workspace you created in Exercise 1.
+1. Navigate to the Microsoft Fabric portal and open the **field-services-@lab.LabInstance.Id** workspace you created in Exercise 1.
 
 1. Select **+ New item** from the top menu and in the dialog, search and select **Semantic model**.
 
@@ -911,10 +911,10 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
     npx rayfin up
     ```
 
-1. Start the local development session, replacing `<workspace-name>` with the display name you recorded in Exercise 1:
+1. Start the local development session:
 
     ```shell
-    npx rayfin dev --workspace "<workspace-name>"
+    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
     ```
 
 1. Open the local app, select **Manager** in the app navigation bar, and open the new dashboard.
