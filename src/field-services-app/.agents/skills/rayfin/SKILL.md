@@ -1,130 +1,43 @@
 ---
 name: rayfin
-description: "Use when doing ANY task involving Rayfin — scaffolding, data models, decorators, auth, deployment, CLI commands, or client setup. Triggers: rayfin, rayfin init, rayfin dev, rayfin up, rayfin login, RayfinClient, @entity, @role, @anonymous, @authenticated, @text, @uuid, @int, @decimal, @boolean, @date, @email, @set, @one, @many, DAB, Data API Builder, rayfin.yml, publishableKey, signUp, signIn, signOut, sendMagicLink, handleMagicLinkCallback, ensureSignedInWithFabric, Fabric SSO, Entra ID, rayfin dev db apply, rayfin up db apply, rayfin up staticapp deploy, schema.ts, OpaqueSession, onSessionChange, GraphQL select, GraphQL create, GraphQL update, GraphQL delete, findById, executePaginated, RLS policy, row-level security, claims.sub, claims.email, TC39 decorators, config generation, dialect, mssql, postgresql"
-metadata:
-  author: microsoft
-  version: 0.3.0
-rayfin-managed: true
+description: "Use for Rayfin entities, permissions, queries, auth, client composition, configuration, CLI, or optional service setup in Field Services."
 ---
-# Rayfin
+# Rayfin in Field Services
 
-## Rayfin Docs
+## Read the installed version first
 
-Rayfin's documentation is available as markdown files and via MCP tools.
-Use these for code examples, API details, and troubleshooting — not this skill.
+Run commands from this app's workspace root. Use the installed `npx rayfin` CLI, not an unversioned package download. Rayfin additions use `^2.0.0`; scaffolding commands use `npm create @microsoft/rayfin@^2.0.0`.
 
-**MCP tools** (if the `rayfin` MCP server is connected):
+Read the owning installed package's `package.json`, resolve `rayfinDocs.dir`, and open `index.md` followed by the needed page. npm may put a dependency under its owning workspace's `node_modules`, not the root.
 
-- `search_docs(query: '<topic>', module: 'guide')` — builder guides and tutorials
-- `search_docs(query: '<topic>', module: 'ts-sdk')` — TypeScript SDK API reference
-- `get_doc(symbol: '<decorator or class>')` — resolve a symbol to its docs
+| Topic | Owning package / documentation |
+| --- | --- |
+| CLI, auth, deployment, limitations | `@microsoft/rayfin-guide`: `known-limitations.md`, `auth/overview.md`, `app-backend/deploy.md` |
+| Decorators and policies | `@microsoft/rayfin-core`: `decorators.md`, `permissions.md` |
+| Queries, mutations, paging | `@microsoft/rayfin-data` |
+| Client composition | `@microsoft/rayfin-client` |
+| Local Vite routing and CLI-brokered sign-in | `@microsoft/rayfin-local-dev` |
+| Optional Functions | [rayfin-functions](../rayfin-functions/SKILL.md) and guide `functions/index.md` |
+| Optional Storage | [rayfin-storage](../rayfin-storage/SKILL.md) and guide `storage/index.md` |
 
-**Direct file access** (same content the MCP indexes):
+The CLI has no docs root; use the installed guide. Only if indexes do not identify a page, use `npx rayfin docs search '<topic>'` or the already configured Rayfin MCP. For a missing package, use version-matched package discovery; do not install unrelated packages just to search. If docs and CLI help disagree, inspect the installed implementation and report the discrepancy.
 
-- In a Rayfin project: `node_modules/@microsoft/rayfin-guide/assets/docs/`
-- If the MCP package isn't installed, install it: `npm install --save-dev @microsoft/rayfin-mcp@^2.0.0`, then re-run the MCP queries above.
+## Preserve the app
 
-Key doc files:
+- Keep decorated entities in `packages/data/src/`, registered in `schema.ts` and exported from `index.ts`. Browser-safe contracts and `FieldServiceSchema` belong in `packages/shared/src/index.ts`; never import entity runtime classes into the browser.
+- Preserve `@field-services/*`, `ServiceContainer`, and the synchronous factory in `packages/frontend/src/services/rayfin/RayfinClientService.ts`. Extend its existing `RayfinClient.create` services map, retain `runtimeConfig`, `browserSession({ storage: true })`, and `dataService<FieldServiceSchema>()`, and infer its type with `ReturnType`. Do not replace it with a client subclass or an asynchronous global accessor.
+- Keep current Fabric auth, protected hosting, redirect URIs, and the DEV-only dynamic broker import. Leave `externalEntraExchange: true` and loopback-bound Vite intact. Public assets would not authorize public data.
+- Preserve styles in `packages/frontend/src/styles/theme.css`, existing UI components, and seed/reset invariants in [AGENTS.md](../../../AGENTS.md). View switching is not role authorization.
+- Functions and Storage are disabled until requested. Do not enable services merely because their skills exist.
 
-- `known-limitations.md` — FK naming, constraint limits, relationship rules
-- `data/permissions.md` — `@role` decorator, policy DSL, field visibility
-- `data/graphql.md` — RayfinClient setup, query chain, mutations
-- `auth/overview.md` — auth methods, session handling
-- `app-backend/deploy.md` — Fabric deployment workflow
+## Model and query safely
 
-**Before creating entities or writing queries**, check known limitations:
+Read `known-limitations.md` before entity/query work. Use TC39 Stage 3 decorators, not `experimentalDecorators` or `emitDecoratorMetadata`. Give every entity explicit permissions; omission is not a safe deny-all default. Review policies server-side, not through UI filters.
 
-```text
-search_docs(query: 'known limitations', module: 'guide')
-# or: view node_modules/@microsoft/rayfin-guide/assets/docs/known-limitations.md
-```
+Use the typed data client, explicit selections, and bounded paginated collection reads. Re-read required fields after partial mutation responses; normalize wire dates at the service boundary. Follow the installed decorator options and reserved GraphQL names rather than guessing. Keep entity and shared contract changes consistent.
 
-## Rules
+For existing Fabric sources use [rayfin-connectors](../rayfin-connectors/SKILL.md), not a new app-owned schema. Verify source identity and returned data before UI integration. Surface configuration/auth/permission failures explicitly, never as sample rows or endless loading.
 
-### Platform
+## Workflow
 
-- Rayfin uses TC39 Stage 3 decorators — never enable `experimentalDecorators` or `emitDecoratorMetadata`.
-- Include `ESNext.Decorators` in the tsconfig `lib` array.
-- `rayfin dev` defaults to Fabric-backed development. Docker is an optional preview provider, not a prerequisite for this lab.
-- Two deployment targets: Rayfin Local (Docker, MSSQL or PostgreSQL) and Fabric Apps (managed, MSSQL only).
-- Use `npm create @microsoft/rayfin@^2.0.0` for new projects in this lab. Keep all Rayfin dependencies on `^2.0.0` and update them together; `npx rayfin` below uses the project's installed CLI.
-- Compose clients with `RayfinClient.create`, `browserSession` from `@microsoft/rayfin-auth`, and `dataService` from `@microsoft/rayfin-data`. Infer the client type from the factory; do not use the removed client constructors. Register connectors through `connectorsService` on the same client.
-
-### Security
-
-- Every entity must have an explicit permission decorator (`@role`, `@anonymous`, `@authenticated`) — entities without one are inaccessible.
-- Add `policy: (claims, item) => claims.sub.eq(item.user_id)` for row-level filtering on user-scoped data.
-- Use `exclude` in role options to hide sensitive fields (e.g., `exclude: ['secret']`).
-- Publishable keys (`pk-*`) are safe for client-side code — never expose service secrets or connection strings.
-- Keep `allowedRedirectUris` in `rayfin.yml` tightly scoped to your app's origin.
-- Email/password auth is local development only — deployed Fabric apps support Fabric SSO (Entra ID) exclusively.
-- For local Fabric-backed development, use the Vite `rayfinLocalDev({ autoLogin: true })` plugin and a development-only dynamic import of its browser helper to install a brokered session. The backend requires `services.auth.fabric.externalEntraExchange: true`. Keep Vite bound to loopback.
-
-### Data Modeling
-
-- In this npm workspace, define entities with `@entity()` in `packages/data/src/`, register them in `schema.ts`, and export the schema from `index.ts`. Keep browser-safe contracts and the client schema in `packages/shared/src/index.ts` aligned with the entities.
-- Every field needs exactly one decorator: `@uuid`, `@text`, `@int`, `@decimal`, `@boolean`, `@date`, `@email`, `@set`.
-- Fields are required by default — use `{ optional: true }` and `?` together for nullable fields.
-- `@text()` length option is `max` (not `maxLength`) — e.g., `@text({ max: 200 })`.
-- Use `@one(() => Target)` with lazy arrow functions for relationships — Rayfin auto-generates FK columns named `{property}_id`.
-- Use `import` (not `import type`) for entity classes referenced in `@one()`/`@many()` arrow functions — decorators need the runtime class value.
-- FK columns referencing another entity (`{property}_id`) must use `@uuid()` to match the PK type. Auth-based fields like `user_id` from `claims.sub` use `@text()`.
-- Many-to-many requires an explicit join entity with two `@one()` fields.
-- Use `@many(() => Target)` for the inverse side of relationships.
-
-### Querying
-
-- Query chain: `.select()` → `.where()` → `.orderBy()` → `.execute()`.
-- Single record reads needing more than the primary key must use `.select([...]).where({ id: { eq: id } }).first(1).execute()`; `findById`, `findFirst`, and `findMany` guarantee only the primary key.
-- Data reads return only selected fields. Convert `Date | string` and boolean wire strings explicitly; re-read complete records after mutations that return partial fields.
-- Filter by FK columns using `{property}_id` (e.g., `customer_id`), not dot-path (e.g., `customer.id`).
-- Dot-paths are for `.select()` only (e.g., `customer.companyName`).
-- Use `.first(n).executePaginated()` for cursor-based pagination.
-- Sort directions must be lowercase: `'asc'` or `'desc'`.
-
-### Schema
-
-- **For Fabric:** `rayfin up` is the canonical command for "deploy this change," "apply this schema change," or "push my entity update" — it deploys the app and applies pending schema migrations in a single step. Recommend it on every deploy, including incremental schema changes after the initial deploy.
-- `rayfin up db apply` is a narrow advanced subcommand that applies schema-only without touching the static build — only recommend it when the user explicitly asks to skip the static deploy step.
-- **For local dev:** `rayfin dev db apply` compiles TS decorators and applies the schema to the local Docker database.
-- `--force` permits destructive changes (drop table, drop column, alter type) — never use without review.
-- `--gen-config-only` generates the underlying API config without applying — use to inspect before applying.
-
-### Deployment
-
-- When the user asks to "build and deploy," "make it live," or "deploy this change" (including schema-only changes like adding a column), execute the full workflow — do not present steps as instructions for the user to run manually.
-- Workflow: `rayfin login` → `rayfin up` → `rayfin up status`. `rayfin up` builds the static app, deploys it, and applies any pending schema migrations.
-- `rayfin up status` checks endpoint health — run after deployment to verify.
-- Deployment metadata is written to `rayfin/.deployments.json` (per-workspace record: `fabricItemId`, `hostingUrl`, `publishableKey`, etc.). The deploy also appends the live hosting URL to `allowedRedirectUris` in `rayfin.yml`.
-
-## Anti-Patterns
-
-- Never use raw `fetch()` or hand-built GraphQL for data operations — always use `client.data.<Entity>` (provides type-safe queries and automatic auth).
-- Never omit permission decorators on entities — always add an explicit `@permissions(...)`. Forgetting silently applies `authenticated: *` (full CRUD for any signed-in user), which is usually too permissive for production data.
-- Never use `@text()` without `max` on MSSQL — always set `@text({ max: N })` (e.g. `max: 200` for typical strings). `NVARCHAR(MAX)` breaks GraphQL schema generation and cannot be uniquely indexed.
-- Never use `@text()` for FK columns that reference another entity's `@uuid()` PK — use `@uuid()` to match types. (`user_id` from `claims.sub` is `@text()`, not a FK.)
-- Never skip `search_docs('known limitations')` before implementing entities — always run it first to surface platform constraints (text length caps, supported scalar types, MSSQL-specific gotchas) that affect entity design.
-
-## CLI Quick Reference
-
-```bash
-# Scaffold
-npm create @microsoft/rayfin@^2.0.0 <name>      # Create from template
-npx rayfin init [directory]                   # Interactive setup
-
-# Local dev
-npx rayfin dev                                # CLI-managed Fabric development session
-npx rayfin dev --down                         # Stop and remove containers
-npx rayfin dev --purge                        # Full reset (delete volumes)
-npx rayfin dev db apply                       # Apply schema changes
-npx rayfin dev db apply --force               # Allow data-loss migrations
-npx rayfin dev watch                          # Auto-apply on file changes
-npx rayfin dev status                         # Show service health
-
-# Deploy to Fabric
-npx rayfin login                              # Sign in with Entra ID
-npx rayfin up                                 # Deploy app + apply schema (canonical)
-npx rayfin up status                          # Check deployment health
-npx rayfin up db apply                        # Schema-only, skip static deploy (advanced)
-npx rayfin up staticapp deploy                # Redeploy static content
-```
+Install at the app root with one lockfile and dependencies owned by their consuming packages. Use [app-validation](../app-validation/SKILL.md) and [app-deployment](../app-deployment/SKILL.md). `npm run dev` is Fabric-backed and may apply remote settings/schema; it is not a read-only local preview. Never run destructive apply/reset commands without owner approval.

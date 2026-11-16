@@ -81,10 +81,12 @@ npm run dev -- --workspace "<your-workspace>"
 
 The checked-in lockfile resolves all `@microsoft/rayfin-*` packages to `2.0.0`. Keep the manifests on `^2.0.0` and update participating packages together. Project creation uses `npm create @microsoft/rayfin@^2.0.0`, not a moving release-channel tag.
 
-From this app directory, refresh the CLI, MCP server, SDK, and local-development plugin together:
+Agent guidance starts in [AGENTS.md](AGENTS.md). The root development dependency `@microsoft/rayfin-guide@^2.0.0` makes version-matched CLI and service documentation available under `node_modules`; follow each package's `rayfinDocs` metadata for SDK documentation. The pinned [.mcp.json](.mcp.json) provides optional documentation-tool access. Functions and Storage guidance is opt-in only; both services remain disabled.
+
+From this app directory, refresh the CLI, guide, MCP server, SDK, and local-development plugin together:
 
 ```shell
-npm update --workspaces --include-workspace-root @microsoft/rayfin-cli @microsoft/rayfin-mcp @microsoft/rayfin-auth @microsoft/rayfin-auth-provider-fabric @microsoft/rayfin-client @microsoft/rayfin-data @microsoft/rayfin-core @microsoft/rayfin-local-dev
+npm update --workspaces --include-workspace-root @microsoft/rayfin-cli @microsoft/rayfin-guide @microsoft/rayfin-mcp @microsoft/rayfin-auth @microsoft/rayfin-auth-provider-fabric @microsoft/rayfin-client @microsoft/rayfin-data @microsoft/rayfin-core @microsoft/rayfin-local-dev
 npx rayfin --version
 ```
 
