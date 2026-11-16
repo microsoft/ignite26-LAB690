@@ -9,7 +9,7 @@ Build, deploy, extend, and analyze a work-order management app for Contoso DIY. 
 3. [Bootstrap the app from a template](02-bootstrap.md)
 4. [Explore the app template](03-explore-template.md)
 5. [Run the app locally](04-run-locally.md)
-6. [Deploy and verify the hosted app](05-deploy.md)
+6. [Verify the production deployment](05-deploy.md)
 7. [Add a feature with GitHub Copilot CLI](06-new-feature.md)
 8. [Seed data for analysis](07-seed-data.md)
 9. [Add a semantic-model dashboard to the app](08-fabric-insights.md)

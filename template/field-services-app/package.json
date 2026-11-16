@@ -8,7 +8,7 @@
   },
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "rayfin dev",
+    "dev": "npm run dev:frontend",
     "predev:frontend": "rayfin env --framework vite",
     "dev:frontend": "npm run dev --workspace @field-services/frontend",
     "dev:fabric": "npm run dev:frontend",

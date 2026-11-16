@@ -4,7 +4,7 @@ Build a Microsoft Fabric semantic model over the work-order data, then use Rayfi
 
 ## Task 1: Build a semantic model
 
-1. In the Fabric portal, open the workspace you created in Exercise 1.
+1. In the Fabric portal, open the workspace that was created for this lab by `rayfin up` in Exercise 4.
 2. Create a semantic model using the deployed SQL Database as its data source.
 3. Include the service-pro, work-order, and comments tables available in your database.
 4. Define active, single-direction relationships from work orders to service pros and from comments to work orders. Set each relationship to **Many to one (*:1)**, with the parent table's identifier on the **one** side. Check these settings explicitly: Direct Lake can infer the wrong cardinality from the current row counts. Leave **Assume referential integrity** cleared because work orders can be unassigned.
@@ -76,7 +76,7 @@ Use the actual table, column, and measure names from your model, including any r
     npx rayfin up
     ```
 
-2. Start the local frontend with `npx rayfin dev --workspace "<workspace-name>"`, using the display name you recorded in Exercise 1, then sign in and open the dashboard from the manager view.
+2. Start the local frontend with `npm run dev`, sign in, and open the dashboard from the manager view.
 3. Confirm that the total work-order count matches a query against the semantic model. Compare the status and service-pro breakdowns with the same model, accounting for unassigned orders.
 4. Open the hosted app and repeat the checks using an account with access to both the app and model. A successful developer-side query alone does not verify the deployed connector.
 5. Confirm that failed queries are shown as errors rather than as an empty dashboard or zero counts.
