@@ -1,6 +1,6 @@
 # Exercise 1: Set up your environment
 
-Before building and deploying the work-order app, sign in to GitHub Copilot and Microsoft Fabric and verify your tools.
+Before building and deploying the work-order app, sign in to Microsoft Fabric, then GitHub Copilot, and verify your tools.
 
 ## Guided lab environment
 
@@ -39,19 +39,19 @@ The Fabric Apps workload and the Semantic Model Execute Queries REST API tenant 
 
 Clone this repository and open it in Visual Studio Code. Exercise 2 creates a separate app project; the included `src/field-services-app/` is a completed reference with comments already implemented. The pre-comments starter used in Exercise 2 is `template/field-services-app/`.
 
+## Sign in to Microsoft Fabric
+
+1. Open a browser in your development environment and go to [Microsoft Fabric](https://app.fabric.microsoft.com). For the guided session, sign in with the lab-provided Microsoft account. For self-paced learning, use the account authorized for your Fabric capacity.
+2. Confirm that the Microsoft Fabric home page opens. If the page title and icon in the bottom-left corner say **Power BI**, select that icon and switch to **Fabric**.
+3. Keep this browser session open. You don't need to create a workspace: `rayfin up` creates one for the app in Exercise 4.
+
 ## Sign in to GitHub and Copilot CLI
 
-1. Open a browser in your development environment. For the guided session, sign in with the lab-provided GitHub account using the sign-in instructions supplied with the lab. For self-paced learning, use your own account with Copilot access.
+1. Open a new browser tab. For the guided session, sign in with the lab-provided GitHub account using the sign-in instructions supplied with the lab. For self-paced learning, use your own account with Copilot access.
 2. Open a terminal and run `copilot`.
 3. If prompted to sign in, run `/login` and complete the browser flow.
 4. Confirm the CLI reports that you are signed in with the intended account and can submit a prompt. If access is denied, resolve the account's Copilot entitlement before continuing.
 5. Exit with `/exit`.
-
-## Sign in to Microsoft Fabric
-
-1. Open [Microsoft Fabric](https://app.fabric.microsoft.com). For the guided session, sign in with the lab-provided Microsoft account. For self-paced learning, use the account authorized for your Fabric capacity.
-2. Confirm that the Microsoft Fabric home page opens. If the page title and icon in the bottom-left corner say **Power BI**, select that icon and switch to **Fabric**.
-3. Keep this browser session open. You don't need to create a workspace: `rayfin up` creates one for the app in Exercise 4.
 
 The GitHub account authorizes Copilot; the Microsoft account authorizes Fabric. Signing in to one does not sign you in to the other. When Rayfin later requests Microsoft sign-in, use the same Microsoft account and tenant you used for Fabric.
 

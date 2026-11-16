@@ -17,7 +17,7 @@ Skip the infrastructure plumbing and ship a real enterprise app. In this hands-o
 
 If you're following along during a live session:
 
-1. Open the lab environment provided for the session and sign in to GitHub and Microsoft Fabric.
+1. Open the lab environment provided for the session and sign in to Microsoft Fabric, then GitHub.
 2. Open [`instructions/`](instructions/README.md) and start with the environment setup.
 
 #### On your own
@@ -25,7 +25,7 @@ If you're following along during a live session:
 If you're learning at your own pace:
 
 1. Clone this repository.
-2. Install Node.js, npm, Visual Studio Code, and GitHub Copilot CLI, then sign in to GitHub and Microsoft Fabric.
+2. Install Node.js, npm, Visual Studio Code, and GitHub Copilot CLI, then sign in to Microsoft Fabric followed by GitHub.
 3. Follow the lab steps in [`instructions/`](instructions/README.md). Deploying the app requires a Fabric workspace and may incur cloud costs.
 
 ### 🎯 Learning outcomes
