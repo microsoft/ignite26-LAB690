@@ -1,6 +1,6 @@
 # Exercise 1: Set up your environment
 
-Before building and deploying the work-order app, sign in to GitHub Copilot and Microsoft Fabric and verify your tools.
+Before building and deploying the work-order app, sign in to Microsoft Fabric, then GitHub Copilot, and verify your tools.
 
 ## Guided lab environment
 
@@ -11,7 +11,7 @@ The guided session uses:
 - A lab-provided Microsoft account.
 - Permission to create Fabric workspaces on the lab's Fabric capacity.
 
-Open the Skillable lab and use its connection instructions to sign in to the Windows VM. Use the account details supplied with your lab environment. You do not need to create a workspace manually, start a Fabric trial, or use a personal subscription for the guided session: `rayfin up` creates a new workspace for the app in Exercise 4. If workspace creation or capacity selection fails, contact the instructor before continuing.
+Open the Skillable lab and use its connection instructions to sign in to the Windows VM. Use the account details supplied with your lab environment. Create your own Fabric workspace below using the lab's capacity; do not start a Fabric trial or use a personal subscription for the guided session. If workspace creation or capacity selection fails, contact the instructor before continuing.
 
 Do not add passwords, access tokens, or other secrets to the repository or paste them into Copilot prompts.
 
@@ -27,31 +27,39 @@ For self-paced learning, prepare:
 | Visual Studio Code | Edit the app and review Copilot's changes. |
 | GitHub Copilot CLI and an account with access | Complete the agent-assisted exercises. |
 | A Microsoft account with access to Fabric | Deploy the app and create its semantic model. |
-| Permission to create Fabric workspaces on supported Fabric capacity | Let `rayfin up` create the workspace that hosts the app, SQL Database, and semantic model. |
+| Permission to create Fabric workspaces on supported Fabric capacity | Create the workspace that hosts the app, SQL Database, and semantic model. |
 
 Use the official installation instructions for [Node.js](https://nodejs.org/en/download), [Git](https://git-scm.com/downloads), [Visual Studio Code](https://code.visualstudio.com/download), and [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/use-copilot-agents/use-copilot-in-the-cli).
 
 On Windows, install or update [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) and open a fresh PowerShell 7 terminal. Update npm to the current release supported by Node.js 24 using the [npm update instructions](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm). In the guided environment, these updates should already be included in the VM image; contact the instructor if they are missing.
 
-You need permission to create Fabric workspaces and assign them to a supported Fabric capacity; `rayfin up` creates the app's workspace in Exercise 4. Arrange capacity and tenant settings with your Fabric administrator before starting. Creating or using cloud resources may incur costs; do not assume that a trial or your personal account provides all required capabilities.
+You need permission to create a Fabric workspace and assign it to a supported Fabric capacity in this exercise. Arrange capacity and tenant settings with your Fabric administrator before starting. Creating or using cloud resources may incur costs; do not assume that a trial or your personal account provides all required capabilities.
 
 The Fabric Apps workload and the Semantic Model Execute Queries REST API tenant setting must be enabled. The account using the dashboard needs Build and Read permissions on the semantic model hosted on Fabric or Power BI capacity. See the [semantic model connector prerequisites](https://learn.microsoft.com/en-us/fabric/apps/data-apps-template#prerequisites).
 
 Clone this repository and open it in Visual Studio Code. Exercise 2 creates a separate app project; the included `src/field-services-app/` is a completed reference with comments already implemented. The pre-comments starter used in Exercise 2 is `template/field-services-app/`.
 
-## Sign in to GitHub and Copilot CLI
-
-1. Open a browser in your development environment. For the guided session, sign in with the lab-provided GitHub account using the sign-in instructions supplied with the lab. For self-paced learning, use your own account with Copilot access.
-2. Open a terminal and run `copilot`.
-3. If prompted to sign in, run `/login` and complete the browser flow.
-4. Confirm the CLI reports that you are signed in with the intended account and can submit a prompt. If access is denied, resolve the account's Copilot entitlement before continuing.
-5. Exit with `/exit`.
-
 ## Sign in to Microsoft Fabric
 
-1. Open [Microsoft Fabric](https://app.fabric.microsoft.com). For the guided session, sign in with the lab-provided Microsoft account. For self-paced learning, use the account authorized for your Fabric capacity.
+1. Open a browser in your development environment and go to [Microsoft Fabric](https://app.fabric.microsoft.com). For the guided session, sign in with the lab-provided Microsoft account. For self-paced learning, use the account authorized for your Fabric capacity.
 2. Confirm that the Microsoft Fabric home page opens. If the page title and icon in the bottom-left corner say **Power BI**, select that icon and switch to **Fabric**.
-3. Keep this browser session open. You don't need to create a workspace: `rayfin up` creates one for the app in Exercise 4.
+3. Keep this browser session open.
+
+## Create your Fabric workspace
+
+1. In the Fabric portal, select **Workspaces**, then **+ New workspace**.
+2. Enter a unique workspace name, such as `field-services-app-<unique-suffix>`, replacing `<unique-suffix>` with a value unique to you.
+3. In the workspace's advanced settings, select the supported Fabric capacity supplied for the lab, then select **Apply**. For self-paced learning, use the capacity arranged with your administrator.
+4. Confirm that the new workspace opens and record its exact display name. Replace `<workspace-name>` in later commands with this value, keeping the quotation marks. Use the display name, not the workspace URL or GUID.
+
+## Sign in to GitHub and Copilot CLI
+
+1. Open a new browser tab. For the guided session, sign in with the lab-provided GitHub account using the sign-in instructions supplied with the lab. For self-paced learning, use your own account with Copilot access.
+2. Open a terminal and run `copilot`.
+3. In the Copilot CLI, run `/update` to update to the latest version.
+4. Run `/login` and complete the browser flow.
+5. Confirm the CLI reports that you are signed in with the intended account and can submit a prompt. If access is denied, resolve the account's Copilot entitlement before continuing.
+6. Exit with `/exit`.
 
 The GitHub account authorizes Copilot; the Microsoft account authorizes Fabric. Signing in to one does not sign you in to the other. When Rayfin later requests Microsoft sign-in, use the same Microsoft account and tenant you used for Fabric.
 
@@ -89,6 +97,7 @@ Before Exercise 2, confirm:
 - Your tools are available and Git has a commit identity.
 - Copilot CLI accepts a prompt using the intended GitHub account.
 - Fabric opens using the intended Microsoft account.
+- Your Fabric workspace is created on supported capacity and you have recorded its display name.
 - You have access to the lab starter template.
 
 If a prerequisite fails, resolve it before creating or deploying the app.
@@ -104,7 +113,7 @@ Prepare and rehearse the following before attendees start:
 | VM image | Install Node.js 24, the current npm release supported by Node.js 24, current stable PowerShell 7, Git, Visual Studio Code, and Copilot CLI. Update the image rather than relying on attendee upgrades; verify `node --version`, `npm --version`, and `pwsh --version` in a fresh PowerShell 7 terminal. |
 | GitHub access | Assign lab accounts with working Copilot access and supply the correct sign-in flow. Verify CLI authorization is permitted. |
 | Microsoft access | Assign lab Microsoft accounts and supply the tenant-specific sign-in flow, including any required MFA steps. |
-| Fabric workspaces | Allow the lab accounts to create workspaces and assign them to the lab's supported Fabric capacity. `rayfin up` creates each attendee's workspace (named like `field-services-app-123456`) when they select **Use new workspace**. |
+| Fabric workspaces | Allow the lab accounts to create their own workspaces in Exercise 1 and assign them to the lab's supported Fabric capacity. Each attendee records the workspace display name for the create and dev commands. |
 | Tenant configuration | Enable Fabric Apps and Semantic Model Execute Queries for the lab accounts. Confirm that the intended semantic-model workflow and Build/Read permissions work. |
 | Starter files | Install the pre-comments starter from `template/field-services-app/` to `C:\LabFiles\template\field-services-app` with the [VM update script](../scripts/README.md). Refresh all of its Rayfin packages together within `^2.0.0` using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify that `npx rayfin --version` reports the locked 2.x CLI version. The imported completed reference is not a substitute for this starter. |
 | Skillable instructions | Use LAB690 for the current lab identity. Preserve original-source attribution links, but remove stale lab identifiers from attendee instructions and platform configuration. |
@@ -112,6 +121,6 @@ Prepare and rehearse the following before attendees start:
 | Connectivity | Allow the VM to reach GitHub/Copilot, npm, Microsoft sign-in, Fabric, and the generated Rayfin app endpoints. Verify with the actual lab network policy. |
 | Git identity | Configure a suitable commit identity for each lab account so the initial commit succeeds without attendee troubleshooting. |
 | Rehearsal | Use a representative attendee account to bootstrap, deploy, sign in, create data, and query the semantic model through the deployed connector. Administrator access alone is not a sufficient check. |
-| Resource lifecycle | Define cleanup ownership for the workspaces created by `rayfin up`, along with isolation and reset. Attendees must not be asked to delete shared resources. |
+| Resource lifecycle | Define cleanup ownership for the workspaces attendees create in Exercise 1, along with isolation and reset. Attendees must not be asked to delete shared resources. |
 
 The guided VM delivery platform is Skillable. Before publication, confirm the account/credential delivery location, exact sign-in instructions, workspace creation and capacity selection, starter path, and cleanup policy. Those delivery details are not yet specified in this repository.

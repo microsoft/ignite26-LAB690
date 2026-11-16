@@ -56,7 +56,7 @@ Before updating the backend, inspect the changed files in Visual Studio Code's S
 
 ## Task 6: Validate the comments workflow
 
-1. Start the local app with `npm run dev`.
+1. Start the local app with `npx rayfin dev --workspace "<workspace-name>"`, using the display name you recorded in Exercise 1.
 2. Open a work order assigned to your service-pro profile and add a comment.
 3. Select **Manager** and confirm you can see and reply to the thread using the same signed-in account.
 4. Select **Jobs** and confirm the reply appears. Reload the page and reopen the collapsed comments section to confirm persistence.
