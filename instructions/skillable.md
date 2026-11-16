@@ -100,6 +100,8 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
 
 1. Exit the Copilot CLI by running: `/exit`. You will start it again in the next exercise when you use it to generate code.
 
+1. *(Optional)* In the virtual machine, select **GitHub Copilot App** on the taskbar to open it, then follow the app's sign-in instructions.
+
 ---
 
 ## Verify Your Setup
