@@ -24,4 +24,4 @@ In Exercise 4, `npx rayfin dev` provisioned the backend and ran the frontend loc
 
 The local and hosted frontends should use the same deployed backend. Follow your organization's guidance for keeping or removing the resources after the lab.
 
-Continue to [Add a feature with GitHub Copilot CLI](06-new-feature.md).
+Continue to Exercise 6 to seed data for analysis.

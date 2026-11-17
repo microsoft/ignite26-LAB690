@@ -86,4 +86,4 @@ If a query fails, check the connector's workspace and item IDs, the tenant setti
 
 You have completed the loop from operational app data to a semantic model and back to an in-app dashboard.
 
-Continue to the [Conclusion](09-conclusion.md).
+Continue to the conclusion.

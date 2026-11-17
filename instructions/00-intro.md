@@ -1,4 +1,6 @@
-# Introduction
+@lab.Title
+
+# Get started
 
 This lab takes a field-services app from a starter template to a deployed, data-driven application using Rayfin, Microsoft Fabric, and GitHub Copilot CLI. Rayfin provides managed backend capabilities so you can focus on the application instead of wiring each cloud service yourself.
 
@@ -8,8 +10,11 @@ During the lab, you will:
 
 - Bootstrap a field-services app and inspect its Rayfin configuration and data model.
 - Provision a managed backend in Microsoft Fabric, run the app locally, and verify its hosted deployment.
-- Use GitHub Copilot CLI to add a schema-backed comments feature.
-- Seed the app with sample operational data and build a Fabric semantic model over it.
+- Seed the app with sample operational data.
+- Use GitHub Copilot CLI or GitHub Copilot App to add a schema-backed comments feature.
+- Build a Fabric semantic model over the operational data.
 - Use Rayfin's Semantic Model connector to bring insights back into a dashboard in the app.
 
 Complete the exercises in order. Each exercise builds on the app, data model, deployment, or Fabric resources created in the previous exercises.
+
+Select **Next →** to start the lab.
