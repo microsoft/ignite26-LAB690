@@ -102,7 +102,7 @@ Before Exercise 2, confirm:
 
 If a prerequisite fails, resolve it before creating or deploying the app.
 
-Continue to [Bootstrap the app from a template](02-bootstrap.md).
+Continue to Exercise 2 to bootstrap the app from a template.
 
 ## Organizer preparation
 
@@ -115,9 +115,9 @@ Prepare and rehearse the following before attendees start:
 | Microsoft access | Assign lab Microsoft accounts and supply the tenant-specific sign-in flow, including any required MFA steps. |
 | Fabric workspaces | Allow the lab accounts to create their own workspaces in Exercise 1 and assign them to the lab's supported Fabric capacity. Each attendee records the workspace display name for the create and dev commands. |
 | Tenant configuration | Enable Fabric Apps and Semantic Model Execute Queries for the lab accounts. Confirm that the intended semantic-model workflow and Build/Read permissions work. |
-| Starter files | Install the pre-comments starter from `template/field-services-app/` to `C:\LabFiles\template\field-services-app` with the [VM update script](../scripts/README.md). Refresh all of its Rayfin packages together within `^2.0.0` using the [reference app's update instructions](../src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify that `npx rayfin --version` reports the locked 2.x CLI version. The imported completed reference is not a substitute for this starter. |
+| Starter files | Install the pre-comments starter from `template/field-services-app/` to `C:\LabFiles\template\field-services-app` with the [VM update script](https://github.com/microsoft/ignite26-LAB690/blob/main/scripts/README.md). Refresh all of its Rayfin packages together within `^2.0.0` using the [reference app's update instructions](https://github.com/microsoft/ignite26-LAB690/blob/main/src/field-services-app/README.md#update-rayfin-packages), include the updated lockfile, and verify that `npx rayfin --version` reports the locked 2.x CLI version. The imported completed reference is not a substitute for this starter. |
 | Skillable instructions | Use LAB690 for the current lab identity. Preserve original-source attribution links, but remove stale lab identifiers from attendee instructions and platform configuration. |
-| Knowledge checks | Rehearse every knowledge check in Skillable with an attendee account and confirm that the intended correct answers validate. The platform questions, answer keys, and validation rules are not stored in this repository and must be corrected in Skillable. |
+| Knowledge checks | Rehearse every knowledge check in Skillable with an attendee account and confirm that the intended correct answers validate. In Exercise 3, replace **src/data** with **packages/data/src** in the data-model question and answer key. The platform questions, answer keys, and validation rules are not stored in this repository and must be corrected in Skillable. |
 | Connectivity | Allow the VM to reach GitHub/Copilot, npm, Microsoft sign-in, Fabric, and the generated Rayfin app endpoints. Verify with the actual lab network policy. |
 | Git identity | Configure a suitable commit identity for each lab account so the initial commit succeeds without attendee troubleshooting. |
 | Rehearsal | Use a representative attendee account to bootstrap, deploy, sign in, create data, and query the semantic model through the deployed connector. Administrator access alone is not a sufficient check. |

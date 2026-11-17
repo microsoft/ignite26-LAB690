@@ -1,4 +1,4 @@
-# Exercise 7: Seed data for analysis
+# Exercise 6: Seed data for analysis
 
 In this exercise, create a richer dataset of service pros and work orders for the semantic model and in-app dashboard that follow.
 
@@ -17,10 +17,8 @@ Do not select **Reset app data** to load the sample. Reset permanently removes e
 1. Open the **Manager** view to review all sample service pros and work orders. The Jobs view shows only your assignments and unassigned jobs; synthetic Service Pros are not additional login accounts.
 2. Confirm that sample records include 92 pending/unassigned, 15 assigned, 8 in progress, 755 completed, 112 needing follow-up, and 58 cancelled work orders before edits. The initial job and your exercise records add to these totals.
 3. Use the status filters and open a few records to check varied skills, locations, and operational states.
-4. Return to **Jobs** and confirm your profile and earlier comments are still present. Repeating restore should not change record counts or replace your changes.
+4. Return to **Jobs** and confirm your profile and earlier work orders are still present. Repeating restore should not change record counts or replace your changes.
 
-## Task 3 (Optional): Add comments
+You will add the comments feature in Exercise 7.
 
-If time permits, add comments to several work orders in both the service-pro and manager experiences. Confirm that the assigned service pro and manager can see the same thread.
-
-Continue to [Add a semantic-model dashboard to the app](08-fabric-insights.md).
+Continue to Exercise 7 to add a feature with GitHub Copilot.

@@ -38,4 +38,8 @@ In Visual Studio Code, review the project folders and identify the corresponding
 
 If time permits, inspect the frontend services and pages. Notice how the app uses Rayfin's typed client and how types derived from the schema help identify frontend code affected by a data-model change.
 
-Continue to [Run the app locally](04-run-locally.md).
+## Knowledge check
+
+The backend entity definitions and schema are in **packages/data/src/**, not **src/data/**.
+
+Continue to Exercise 4 to run the app locally.
