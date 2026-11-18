@@ -174,11 +174,11 @@ In this task, you will inspect the generated project, initialize a Git repositor
     code field-services-app
     ```
 
-1. In the pop-up dialog in Visual Studio Code that appears asking if you trust the authors, select **Yes, I trust the authors**.
+1. If Visual Studio Code prompts you to sign in, select **GitHub** and use your lab GitHub account. If the browser asks permission to return to Visual Studio Code, allow it.
+
+1. If a dialog asks whether you trust the authors, select **Yes, I trust the authors**. If a **Restricted Mode** banner appears instead, select **Manage**, then trust this project folder to enable editing and running the app.
 
 1. In the Visual Studio Code Explorer, expand the **field-services-app** folder that was created by the bootstrap command.
-
-    !IMAGE[vscode-explorer.png](instructions345417/vscode-explorer.png)
 
 1. Review the project structure. It should look something like this:
 
@@ -326,6 +326,8 @@ You do not need to understand the full frontend in this exercise.
 
 @lab.ActivityGroup(check1)
 
+The backend entity definitions and schema are in **packages/data/src/**, not **src/data/**.
+
 If either question is unclear, review Task 2 and Task 3 before continuing.
 
 Continue with **Next →** to run the App locally.
@@ -349,14 +351,20 @@ The **rayfin dev** command provisions a missing managed backend (database, auth,
 
 1. Use the VS Code terminal from the previous exercise. It should already be in the **field-services-app** folder.
 
+1. In this lab VM, enable the token-storage fallback in the current PowerShell terminal:
+
+    ```powershell
+    $env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"
+    ```
+
+    > [!IMPORTANT]
+    > This permits plaintext token storage when the VM's OS keychain is unavailable. Use it only in the lab VM, and do not share the stored tokens. Repeat this step if you open a new PowerShell terminal.
+
 1. Start the development session by running:
 
     ```shell
     npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
     ```
-
-    > [!IMPORTANT]
-    > Rayfin tool may report an error like **Login failed: OS keychain is not available and plaintext token storage is not enabled.** because of the VM environment. If you run into this, run `$env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"` in the terminal to enable plaintext token storage for the current session, then retry the command.
 
 1. On the first run, the CLI will:
 
@@ -382,7 +390,7 @@ The **rayfin dev** command provisions a missing managed backend (database, auth,
 
 The frontend is the React app that users interact with. **rayfin dev** has already started it; you do not need to start a separate development server.
 
-1. Copy the local frontend URL shown in the terminal, which should be similar to `http://localhost:5173`, and open it in a new browser tab.
+1. Hold **Ctrl** and select the local frontend URL shown in the Visual Studio Code terminal, usually `http://localhost:5173`, to open it in Visual Studio Code's browser. Alternatively, copy and paste the URL into a browser window.
 
 1. The Vite local-development plugin uses the Rayfin CLI's Microsoft sign-in to establish the app session automatically, so you don't need a separate email and password. If the CLI prompts you to sign in, use the same Microsoft account you used for Fabric:
 
@@ -463,8 +471,6 @@ You will:
 
 1. In the command output, find the **static hosting URL** printed by the CLI.
 
-    !IMAGE[rayfin-up.png](instructions345417/rayfin-up.png)
-
     > [!TIP]
     > If you missed the hosting URL, run `npx rayfin up status` from the **field-services-app** folder to print the current deployment details.
 
@@ -499,13 +505,61 @@ Let's take a look at the deployed app and database in the Microsoft Fabric porta
 
     !IMAGE[fabric-sql-tables.png](instructions345417/fabric-sql-tables.png)
 
-Continue with **Next →** to update the app with a new feature.
+Continue with **Next →** to seed data for analysis.
 
 ===
 
-# Exercise 6: Add a Feature with Copilot CLI
+# Exercise 6: Seed data for analysis
 
-In the previous exercises, you deployed the Field Services app to Microsoft Fabric and confirmed that the hosted app uses the same Rayfin backend as your local development experience. In this exercise, you will use GitHub Copilot CLI to implement a schema-backed comments feature for work orders.
+In this exercise, seed the deployed backend with a richer dataset for the comments feature and analysis-focused steps that follow.
+
+## Task 1: Open the admin page and seed the database
+
+The template includes an authenticated admin page at `/_admin/` that can restore a fixed sample dataset from **packages/frontend/src/data/field-service-seed.json**.
+
+1. In the hosted app, navigate directly to `/_admin/` by appending it to the hosting URL.
+
+1. Confirm that the admin page is accessible while you are signed in.
+
+1. Check the workspace and app item IDs shown on the page, and confirm that they identify your app.
+
+1. Select **Restore sample data**. This adds missing records from a fixed dataset of 12 synthetic Service Pros and 1,040 work orders spanning April 30, 2025 through April 30, 2026.
+
+1. Wait for the operation to complete.
+
+    > [!Important]
+    > Browser-side chunks continue automatically and save a resume position after confirmed operations. Timeouts and throttling retry automatically with backoff; the page shows when it is waiting. To interrupt safely, select **Pause after current batch**, including while waiting to retry. After a pause, reload, or other error, return in the same browser, app, and account and select **Resume restore**. Stable record IDs prevent duplicates, and records are not skipped or overwritten. Chunks stop starting new batches after 20 seconds; in-flight requests and verification can take longer.
+    > !IMAGE[Requesterror.png](instructions345417/Requesterror.png)
+
+1. Confirm that the completion message reports the current totals. Your own profile, exercise work orders, and edits are preserved, so totals may be higher than the sample counts.
+
+    > [!Alert]
+    > Do **not** select **Reset app data** to load the sample. Reset permanently removes every profile, work order, and comment in this app, including your exercise work. If an approved reset is interrupted, type `RESET <current-app-item-id>` again and select **Resume reset**. **Discard checkpoint** forgets saved progress but does not undo changes.
+
+## Task 2: Validate the seeded dataset in the app
+
+After the restore operation completes, confirm that the larger dataset is visible in the app.
+
+1. Select **Manager** in the app navigation bar to review all sample service pros and work orders.
+
+    > [!Note]
+    > The **Jobs** view shows only your own assignments and unassigned jobs. The synthetic Service Pros are not additional login accounts.
+
+1. Confirm that the sample records include 92 pending/unassigned, 15 assigned, 8 in progress, 755 completed, 112 needing follow-up, and 58 cancelled work orders. The initial job and your exercise records add to these totals.
+
+1. Use the status filters and open a few records to verify that the seeded data includes varied skills, locations, and operational states.
+
+1. Return to **Jobs** and confirm that your profile and earlier work orders are still present.
+
+You will add the comments feature in Exercise 7.
+
+Continue with **Next →** to add a feature with GitHub Copilot.
+
+===
+
+# Exercise 7: Add a feature with GitHub Copilot
+
+In the previous exercises, you deployed the Field Services app to Microsoft Fabric and seeded it with sample data. In this exercise, use GitHub Copilot CLI or GitHub Copilot App to implement a schema-backed comments feature for work orders.
 
 The comments feature gives each work order a conversation thread where service pros and managers can discuss job details over time. Implementing this feature requires changes across the Rayfin data model, permissions, typed data access, and React user interface.
 
@@ -535,6 +589,9 @@ The Rayfin agent skill provides domain guidance for entities, decorators, permis
 
 ## Task 2: Launch GitHub Copilot CLI
 
+> [!NOTE]
+> If you prefer, open the existing **field-services-app** folder in GitHub Copilot App and use the same prompts and review steps. You do not need to run the CLI as well.
+
 Start GitHub Copilot CLI from the app project folder so it can read the project files, agent instructions, and Rayfin configuration.
 
 1. Open a terminal in Visual Studio Code.
@@ -547,11 +604,25 @@ Start GitHub Copilot CLI from the app project folder so it can read the project 
 
 1. Use the model and reasoning settings available for your account. When GitHub Copilot CLI asks to edit files or run commands, review each proposed action before approving it.
 
+    > [!TIP]
+    > *(Optional)* In this trusted lab project, run `/yolo` to let the CLI act without asking for each tool permission. This allows file changes and command execution without individual approval; leave it off if you want to review each action.
+
 ## Task 3: Generate the comments feature
 
 Use GitHub Copilot CLI to generate the comments feature without applying the backend schema change yet.
 
-1. In the GitHub Copilot CLI prompt, paste the following implementation request:
+1. In a separate project terminal, start the existing app:
+
+    ```shell
+    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
+    ```
+
+    > [!NOTE]
+    > In a new PowerShell terminal on the lab VM, first run `$env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"`.
+
+1. Confirm that the app opens, then stop the development session with **Ctrl+C** before Copilot changes the schema. This lets you review backend changes before applying them.
+
+1. In Copilot, paste the following implementation request:
 
     ```text
     Implement a comments feature for work orders. Comments should provide a history of interventions so service pros and the manager can communicate about a work order. Each comment must include an id, userId, createdAt, workOrderId, and content. Keep the comments section collapsed by default. Let the attendee add comments from the assigned service-pro experience and reply from the manager experience using the same signed-in account. These are switchable demonstration views, not independently authorized roles. Preserve authenticated backend access; do not treat the view switch as authorization or add a second account requirement. Generate the code, but do not apply the backend schema change yet.
@@ -603,37 +674,23 @@ Before applying backend changes, review the files generated by GitHub Copilot CL
 
 ## Task 5: Apply the schema update and redeploy
 
-The implementation request asked GitHub Copilot CLI to generate code without applying backend changes. To test the feature, apply the new schema to the Microsoft Fabric backend and redeploy the app.
+After reviewing the implementation, ask Copilot to apply the schema and publish the app in one deployment:
 
-1. Exit GitHub Copilot CLI by typing `/exit` in the prompt.
+1. Enter the following prompt:
 
-1. In a terminal in the **field-services-app** folder, apply the database schema update:
-
-    ```shell
-    npx rayfin up db apply
+    ```text
+    Apply the reviewed changes to this app's existing Fabric deployment with npx rayfin up. This command applies pending schema changes and publishes the frontend, so do not run a separate database apply command. Do not drop or rename existing tables or columns, reset data, or force destructive changes. If a destructive change is reported, stop and show me the details. Confirm that deployment succeeds and report any errors.
     ```
 
-1. Confirm that the command completes successfully and creates the new **WorkOrderComments** table.
+1. Confirm that deployment completes successfully and creates the comments table, such as **WorkOrderComments**.
 
     !IMAGE[fabric-workordercomments-table.png](instructions345417/fabric-workordercomments-table.png)
-
-    > [!Note]
-    > If the command warns about destructive changes, stop and review the listed operations before continuing. Adding a new entity should not require dropping or renaming existing columns.
-
-1. Deploy the updated backend API metadata and frontend:
-
-    ```shell
-    npx rayfin up
-    ```
-
-    > [!Note]
-    > The full `rayfin up` flow can also apply pending database migrations. In this lab, you applied the database change first so the schema update is visible as a separate step.
 
 ## Task 6: Validate the comments workflow
 
 Test the comments feature from both the local development app and the hosted app.
 
-1. Start the local development session if it's not already running:
+1. In the separate project terminal, start the local development session:
 
     ```shell
     npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
@@ -659,6 +716,8 @@ Test the comments feature from both the local development app and the hosted app
 
 1. Open the live hosting URL from Exercise 5 and repeat a quick smoke test to confirm that the deployed app also includes the comments feature.
 
+1. *(Optional)* Add comments to several work orders for richer analysis in Exercise 8.
+
 ## Task 7: Refine the implementation if needed
 
 If the feature does not work as expected, use GitHub Copilot CLI to make a targeted fix. Include the observed behavior, error message, or screenshot details in your follow-up prompt.
@@ -681,79 +740,13 @@ After GitHub Copilot CLI applies a fix, review the proposed changes, then repeat
 
 You have completed the feature implementation and validation workflow for the Field Services app.
 
-Continue with **Next →** to Seed Data for Analysis.
-
-===
-
-# Exercise 7: Seed Data for Analysis
-
-In Exercise 6, you implemented and deployed a schema-backed comments feature. In this exercise, you will seed the backend with a richer dataset for the analysis-focused steps that follow.
-
-Seeding data provides a realistic set of service pros, work orders, and statuses so the next analysis-focused exercises have meaningful data to query.
-
-By completing this exercise, you will:
-
-- Use the built-in admin experience to seed the database.
-- Confirm that the app now includes a larger, more realistic dataset.
-- Optionally add additional comments to improve downstream analysis scenarios.
-
-## Task 1: Open the admin page and seed the database
-
-The template includes an authenticated admin page at `/_admin/` that can restore a fixed sample dataset from **packages/frontend/src/data/field-service-seed.json**.
-
-1. In the hosted app, navigate directly to `/_admin/` by appending it to the hosting URL.
-
-1. Confirm that the admin page is accessible while you are signed in.
-
-1. Check the workspace and app item IDs shown on the page, and confirm that they identify your app.
-
-1. Select **Restore sample data**. This adds missing records from a fixed dataset of 12 synthetic Service Pros and 1,040 work orders spanning April 30, 2025 through April 30, 2026.
-
-1. Wait for the operation to complete.
-
-    > [!Important]
-    > Browser-side chunks continue automatically and save a resume position after confirmed operations. Timeouts and throttling retry automatically with backoff; the page shows when it is waiting. To interrupt safely, select **Pause after current batch**, including while waiting to retry. After a pause, reload, or other error, return in the same browser, app, and account and select **Resume restore**. Stable record IDs prevent duplicates, and records are not skipped or overwritten. Chunks stop starting new batches after 20 seconds; in-flight requests and verification can take longer.
-    > !IMAGE[Requesterror.png](instructions345417/Requesterror.png)
-
-1. Confirm that the completion message reports the current totals. Your own profile, exercise work orders, edits, and comments are preserved, so totals may be higher than the sample counts.
-
-    > [!Alert]
-    > Do **not** select **Reset app data** to load the sample. Reset permanently removes every profile, work order, and comment in this app, including your exercise work. If an approved reset is interrupted, type `RESET <current-app-item-id>` again and select **Resume reset**. **Discard checkpoint** forgets saved progress but does not undo changes.
-
-## Task 2: Validate the seeded dataset in the app
-
-After the restore operation completes, confirm that the larger dataset is visible in the app.
-
-1. Select **Manager** in the app navigation bar to review all sample service pros and work orders.
-
-    > [!Note]
-    > The **Jobs** view shows only your own assignments and unassigned jobs. The synthetic Service Pros are not additional login accounts.
-
-1. Confirm that the sample records include 92 pending/unassigned, 15 assigned, 8 in progress, 755 completed, 112 needing follow-up, and 58 cancelled work orders. The initial job and your exercise records add to these totals.
-
-1. Use the status filters and open a few records to verify that the seeded data includes varied skills, locations, and operational states.
-
-1. Return to **Jobs** and confirm that your profile and earlier comments are still present.
-
-## Task 3: (Optional) Add more comments for richer analysis
-
-If time permits, add comments to multiple work orders so downstream analysis has richer conversational data.
-
-1. Open several work orders in both Service Pro and manager views.
-
-1. Add one or more comments per work order.
-
-1. Confirm that each thread is visible from both the Service Pro and manager views.
-
-You now have a production-deployed app with a realistic dataset ready for analysis.
-
 Continue with **Next →** to add a semantic-model dashboard to the app.
 
 ===
 
 # Exercise 8: Add a Semantic-Model Dashboard to the App
 
-In Exercise 7, you seeded the database with a realistic production dataset. In this exercise, you will turn that operational data into insights and bring them back into the app.
+In Exercise 6, you seeded the database with a realistic production dataset, then added comments in Exercise 7. In this exercise, you will turn that operational data into insights and bring them back into the app.
 
 The Microsoft Fabric SQL Database provisioned by Rayfin is a first-class citizen in your Fabric workspace. You will build a Power BI semantic model over it, then use Rayfin's **Semantic Model connector** and GitHub Copilot CLI to add an operational dashboard to the existing Field Services app. The dashboard queries the semantic model through the connector rather than reading the operational tables directly.
 
@@ -919,7 +912,7 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 
 1. Open the local app, select **Manager** in the app navigation bar, and open the new dashboard.
 
-1. Confirm that the total work-order count, the breakdown by status, and the breakdown by Service Pro look consistent with the seeded data from Exercise 7, accounting for unassigned orders.
+1. Confirm that the total work-order count, the breakdown by status, and the breakdown by Service Pro look consistent with the seeded data from Exercise 6, accounting for unassigned orders.
 
 1. Open the live hosting URL from Exercise 5 and repeat the checks in the hosted app. A successful local query alone does not verify the deployed connector.
 
