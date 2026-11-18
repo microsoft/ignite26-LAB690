@@ -25,7 +25,7 @@ If you're following along during a live session:
 If you're learning at your own pace:
 
 1. Clone this repository.
-2. Install Node.js, npm, Visual Studio Code, and GitHub Copilot CLI, then sign in to Microsoft Fabric followed by GitHub.
+2. Install Node.js, npm, Git, and the GitHub Copilot app, then sign in to Microsoft Fabric followed by GitHub.
 3. Follow the lab steps in [`instructions/`](instructions/README.md). Deploying the app requires a Fabric workspace and may incur cloud costs.
 
 ### 🎯 Learning outcomes
@@ -33,15 +33,14 @@ If you're learning at your own pace:
 By the end of this session, you will be able to:
 
 - Bootstrap and deploy a full-stack field-services app using Rayfin and Microsoft Fabric.
-- Use GitHub Copilot CLI to evolve an app's schema and user interface with a managed backend.
+- Use the GitHub Copilot app to evolve an app's schema and user interface with a managed backend.
 - Connect a Microsoft Fabric semantic model to an in-app dashboard using Rayfin's Semantic Model connector.
 
 ### 💻 Technologies used
 
 - Rayfin (including the Semantic Model connector)
-- GitHub Copilot CLI
+- GitHub Copilot app
 - Microsoft Fabric (SQL Database and semantic models)
-- Visual Studio Code
 - TypeScript
 
 ### 📚 Continue your learning

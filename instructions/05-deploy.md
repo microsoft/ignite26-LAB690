@@ -1,17 +1,21 @@
 # Exercise 5: Deploy and verify the hosted app
 
-In Exercise 4, `npx rayfin dev` provisioned the backend and ran the frontend locally without publishing it. In this exercise, use `npx rayfin up` to publish the frontend to the same Fabric workspace, verify the hosted app, and inspect its items.
+In Exercise 4, `npx rayfin dev` provisioned the backend and ran the frontend locally without publishing it. In this exercise, ask Copilot to run `npx rayfin up` to publish the frontend to the same Fabric workspace, verify the hosted app, and inspect its items.
 
 ## Task 1: Deploy and open the hosted app
 
-1. In the project directory, run the following command, replacing `<workspace-name>` with the exact display name you recorded in Exercise 1:
+1. In the **field-services-app** session, enter the following prompt, replacing `<workspace-name>` with the exact display name you recorded in Exercise 1:
 
-    ```shell
+    ```text
+    Deploy this app to my Fabric workspace by running this command, without running prior checks or a dry run:
     npx rayfin up --workspace "<workspace-name>"
+    Return the static hosting URL of the deployed app when done.
     ```
 
-2. Wait for the CLI to build and publish the frontend and apply any pending backend changes.
-3. Find the static hosting URL in the command output. If needed, run `npx rayfin up status` from the project directory to display the deployment details.
+    If you needed the `RAYFIN_ENCRYPTION_FALLBACK_ENABLED` setting in Exercise 4, include it in this prompt too.
+
+2. Wait for the agent to report that the CLI built and published the frontend and applied any pending backend changes.
+3. Find the static hosting URL in the agent's response. If needed, ask Copilot to run `npx rayfin up status` to display the deployment details.
 4. Open the hosting URL in a browser. The app should show the same sign-in experience as the local frontend.
 5. Sign in and confirm that your service-pro profile and work orders are visible.
 6. Open the `/manager/` path on the hosted app and create a work order.
@@ -24,4 +28,4 @@ In Exercise 4, `npx rayfin dev` provisioned the backend and ran the frontend loc
 
 The local and hosted frontends should use the same deployed backend. Follow your organization's guidance for keeping or removing the resources after the lab.
 
-Continue to [Add a feature with GitHub Copilot CLI](06-new-feature.md).
+Continue to [Seed data for analysis](06-seed-data.md).
