@@ -24,8 +24,10 @@ This lab uses Rayfin `^2.0.0`. Use `@^2.0.0` in every `npm create` command and `
     code field-services-app
     ```
 
-2. Review the generated files and accept the workspace trust prompt if it appears.
-3. In the project terminal, initialize Git, stage the project, and commit the starter files:
+2. If Visual Studio Code prompts you to sign in, select **GitHub** and use the GitHub account you signed in with in Exercise 1. If the browser asks permission to return to Visual Studio Code, allow it.
+3. If a dialog asks whether you trust the authors, select **Yes, I trust the authors**. If a **Restricted Mode** banner appears instead, select **Manage**, then trust this project folder to enable editing and running the app.
+4. Review the generated files.
+5. In the project terminal, initialize Git, stage the project, and commit the starter files:
 
     ```shell
     git init

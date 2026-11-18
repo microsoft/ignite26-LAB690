@@ -27,7 +27,7 @@ In Visual Studio Code, review the project folders and identify the corresponding
 
 ## Task 3: Review the data model
 
-1. Open the `packages/data/src/` directory and find the schema file and the entity definitions for service pros and work orders.
+1. Open the `packages/data/src/` directory (not `src/data/`) and find the schema file and the entity definitions for service pros and work orders.
 2. Review the schema file. Every entity must be imported and included in the schema.
 3. Review the entity definitions and note how decorators define tables, fields, and access rules. The `user_id` field associates a profile with its authenticated user; it is not necessarily a relationship to another Rayfin entity.
 4. Find how work orders represent status and an optional assignment to a service pro.
