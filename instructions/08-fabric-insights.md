@@ -42,8 +42,7 @@ Use the actual table, column, and measure names from your model, including any r
 
 ## Task 3: Add the dashboard with GitHub Copilot
 
-1. In the same session, select **Interactive** in the chat input area to switch to **Plan** mode.
-2. Ask Copilot to add the dashboard using the registered connector:
+1. In the same session, ask Copilot to add the dashboard using the registered connector:
 
     ```text
     Add an operational dashboard to the existing Field Services app, reachable from the manager view. Use the registered fieldservicesmodel Semantic Model connector.
@@ -61,9 +60,9 @@ Use the actual table, column, and measure names from your model, including any r
     Reuse the app's components and styling. Keep the existing Fabric sign-in flow and do not add credentials, access tokens, or direct Execute Queries REST API calls. Generate the changes for review; do not deploy yet.
     ```
 
-3. Review the proposed changes and the task list in the **Plan** canvas, then select **Approve and implement this plan**.
-4. When the agent finishes, select the **Changes** button and review the changed files. Confirm that the dashboard uses the connector and that the existing profile, work-order, and comments workflows remain intact.
-5. Confirm that connector configuration, generated types, client options, and runtime registration all use the same `fieldservicesmodel` key.
+2. Wait for Copilot to finish. When it asks for permission to edit files or run commands, review each proposed action, then approve it.
+3. Select the **Changes** button and review the changed files. Confirm that the dashboard uses the connector and that the existing profile, work-order, and comments workflows remain intact.
+4. Confirm that connector configuration, generated types, client options, and runtime registration all use the same `fieldservicesmodel` key.
 
 ## Task 4: Deploy and verify the dashboard
 
