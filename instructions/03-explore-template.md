@@ -4,7 +4,7 @@ Quickly inspect the app generated in Exercise 2. Skim the files; you do not need
 
 ## Task 1: Explore the project structure
 
-In Visual Studio Code, review the project folders and identify the corresponding files in your generated template:
+In the **Files** panel of the GitHub Copilot app, review the project folders and identify the corresponding files in your generated template. If you closed the panel, select the **Toggle panel** button in the top-right corner of the app, select **+** (**Open in panel**), then select **Files**.
 
 | Folder or file | Why it matters |
 | --- | --- |

@@ -1,6 +1,6 @@
 # Exercise 8: Add a semantic-model dashboard to the app
 
-Build a Microsoft Fabric semantic model over the work-order data, then use Rayfin's Semantic Model connector to add a dashboard to the existing Field Services app. The dashboard queries the semantic model through the connector rather than reading the operational tables directly.
+Build a Microsoft Fabric semantic model over the work-order data, then use Rayfin's Semantic Model connector and the GitHub Copilot app to add a dashboard to the existing Field Services app. The dashboard queries the semantic model through the connector rather than reading the operational tables directly.
 
 ## Task 1: Build a semantic model
 
@@ -10,7 +10,7 @@ Build a Microsoft Fabric semantic model over the work-order data, then use Rayfi
 4. Define active, single-direction relationships from work orders to service pros and from comments to work orders. Set each relationship to **Many to one (*:1)**, with the parent table's identifier on the **one** side. Check these settings explicitly: Direct Lake can infer the wrong cardinality from the current row counts. Leave **Assume referential integrity** cleared because work orders can be unassigned.
 5. Rename key columns with clear labels and add descriptions to the tables so the model's business meaning is clear.
 6. Save the model as `FieldServices`. Confirm that it can query the seeded data and refresh it if its storage mode requires a refresh.
-7. Record the model's workspace ID and semantic model item ID. The connector needs both identifiers.
+7. Keep the semantic model open in your browser. Its URL contains the workspace ID and semantic model item ID that the connector needs, in the form `https://app.fabric.microsoft.com/groups/<workspace-id>/datasets/<semantic-model-item-id>/...`.
 
 Suggested descriptions:
 
@@ -20,34 +20,30 @@ Suggested descriptions:
 
 ## Task 2: Connect the semantic model to the app
 
-1. Return to a terminal in the existing `field-services-app` project. Do not create a second app or replace the Field Services template.
-2. Add a connector named `fieldservicesmodel`, replacing the identifiers with the values from Task 1:
+1. In the GitHub Copilot app, open a new session in the existing **field-services-app** project, and make sure it uses **Current checkout**. Do not create a second app or replace the Field Services template.
+2. Ask Copilot to add a connector named `fieldservicesmodel` and inspect the model. Replace the placeholder at the end with the semantic model URL copied from your browser's address bar:
 
-    ```shell
+    ```text
+    Add a Rayfin connector for my FieldServices semantic model to this app by running:
     npx rayfin connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
+    Take the workspace ID and semantic model item ID from the URL below. Then run the version-matched package installation command printed by the CLI, and inspect the model with npx rayfin connector inspect --name fieldservicesmodel. If metadata inspection fails with a DAX query error, inspect each table with npx rayfin connector inspect --name fieldservicesmodel --entity "<table-name>" --rows 1.
+    List the model's tables, columns, relationships, and measures. Don't change the app code yet.
+    Semantic model URL: <replace with your semantic model URL>
     ```
 
-3. Run the version-matched package installation command printed by the installed 2.x CLI. Keep connector and SDK packages on the same release within `^2.0.0`; do not substitute moving tags or prereleases.
-4. Review the generated connector entry in `rayfin/rayfin.yml`. Confirm that it points to your model and uses delegated authentication. Queries run as the signed-in user, who must have Build and Read permissions on the model.
+    If you needed the `RAYFIN_ENCRYPTION_FALLBACK_ENABLED` setting in Exercise 4, include it in this prompt and the next ones too.
+
+3. Confirm that the agent ran the version-matched package installation command printed by the installed 2.x CLI. Keep connector and SDK packages on the same release within `^2.0.0`; do not substitute moving tags or prereleases.
+4. In the **Files** panel, review the generated connector entry in `rayfin/rayfin.yml`. Confirm that it points to your model and uses delegated authentication. Queries run as the signed-in user, who must have Build and Read permissions on the model.
 5. Review `rayfin/connectors/fieldservicesmodel/schema.ts`. Keep this generated file unchanged.
-6. Inspect the model before writing queries:
-
-    ```shell
-    npx rayfin connector inspect --name fieldservicesmodel
-    ```
-
-    If metadata inspection fails with a DAX query error, inspect each table with a bounded sample. Replace `<table-name>` with the actual name shown in the model:
-
-    ```shell
-    npx rayfin connector inspect --name fieldservicesmodel --entity "<table-name>" --rows 1
-    ```
+6. Read the agent's summary of the model's tables, columns, relationships, and measures.
 
 Use the actual table, column, and measure names from your model, including any renames made in Task 1. See the [Rayfin Semantic Model connector documentation](https://rayfin.ai/docs/connectors/semantic-models) for configuration and client wiring.
 
-## Task 3: Add the dashboard with Copilot CLI
+## Task 3: Add the dashboard with GitHub Copilot
 
-1. Start `copilot` in the app project.
-2. Ask it to add the dashboard using the registered connector:
+1. In the same session, select **Interactive** in the chat input area to switch to **Plan** mode.
+2. Ask Copilot to add the dashboard using the registered connector:
 
     ```text
     Add an operational dashboard to the existing Field Services app, reachable from the manager view. Use the registered fieldservicesmodel Semantic Model connector.
@@ -65,24 +61,34 @@ Use the actual table, column, and measure names from your model, including any r
     Reuse the app's components and styling. Keep the existing Fabric sign-in flow and do not add credentials, access tokens, or direct Execute Queries REST API calls. Generate the changes for review; do not deploy yet.
     ```
 
-3. Review the generated changes. Confirm that the dashboard uses the connector and that the existing profile, work-order, and comments workflows remain intact.
-4. Confirm that connector configuration, generated types, client options, and runtime registration all use the same `fieldservicesmodel` key.
+3. Review the proposed changes and the task list in the **Plan** canvas, then select **Approve and implement this plan**.
+4. When the agent finishes, select the **Changes** button and review the changed files. Confirm that the dashboard uses the connector and that the existing profile, work-order, and comments workflows remain intact.
+5. Confirm that connector configuration, generated types, client options, and runtime registration all use the same `fieldservicesmodel` key.
 
 ## Task 4: Deploy and verify the dashboard
 
-1. Exit Copilot CLI with `/exit`, then deploy the connector configuration and dashboard:
+1. In the same session, ask Copilot to deploy the connector configuration and dashboard:
 
-    ```shell
-    npx rayfin up
+    ```text
+    Deploy the connector configuration and the dashboard to this app's existing Fabric deployment with npx rayfin up. Confirm that deployment succeeds and report any errors.
     ```
 
-2. Start the local frontend with `npx rayfin dev --workspace "<workspace-name>"`, using the display name you recorded in Exercise 1, then sign in and open the dashboard from the manager view.
+2. Ask Copilot to start the local frontend in a visible terminal, replacing `<workspace-name>` with the display name you recorded in Exercise 1:
+
+    ```text
+    Open a terminal in the canvas view so I can watch its output. In that terminal, start the Rayfin development session by running:
+    npx rayfin dev --workspace "<workspace-name>"
+    Leave it running, and give me the local frontend URL when it's ready.
+    ```
+
+    Open the local URL reported by the agent, sign in, and open the dashboard from the manager view.
+
 3. Confirm that the total work-order count matches a query against the semantic model. Compare the status and service-pro breakdowns with the same model, accounting for unassigned orders.
 4. Open the hosted app and repeat the checks using an account with access to both the app and model. A successful developer-side query alone does not verify the deployed connector.
 5. Confirm that failed queries are shown as errors rather than as an empty dashboard or zero counts.
 6. Verify the row limit locally and in the hosted app with a query that exceeds it. Treat an over-limit response as an error even if the connector reports success.
 
-If a query fails, check the connector's workspace and item IDs, the tenant setting, the signed-in user's model permissions, and the actual DAX field names. Use the connector's error category, message, and request ID to investigate.
+If a query fails, check the connector's workspace and item IDs, the tenant setting, the signed-in user's model permissions, and the actual DAX field names. Use the connector's error category, message, and request ID to investigate, or give these details to Copilot in the same session and ask for a targeted fix.
 
 You have completed the loop from operational app data to a semantic model and back to an in-app dashboard.
 
