@@ -599,10 +599,6 @@ Start a new session in the app project so GitHub Copilot can read the project fi
 
 1. Below the chat input area, make sure that **Current checkout** is selected. If it shows **New worktree**, select it and change it to **Current checkout**.
 
-1. In the chat input area, select **Interactive** (mode) to switch to **Plan** mode. Since this feature involves multiple changes to the app, Plan mode helps you review and approve them before they are applied.
-
-    !IMAGE[github-copilot-switch-to-plan-mode.png](instructions359717/github-copilot-switch-to-plan-mode.png)
-
 ## Task 3: Generate the comments feature
 
 Use GitHub Copilot to generate the comments feature without applying the backend schema change yet.
@@ -619,10 +615,7 @@ Use GitHub Copilot to generate the comments feature without applying the backend
     Preserve the existing RayfinClient.create composition with browserSession and dataService. Select every field the comments UI needs, convert wire dates at the service boundary, and do not treat partial mutation responses as complete records.
     ```
 
-1. Once the plan is generated, review the proposed changes and the task list in the **Plan** canvas on the right panel, then select **Approve and implement this plan** to start the implementation.
-
-    > [!Note]
-    > When you approve the plan, GitHub Copilot automatically switches to **Autopilot** mode to implement the changes. In this mode, it doesn't ask you questions and carries out the tasks as specified until the work is complete.
+1. Watch the agent work. When GitHub Copilot asks for permission to edit files or run commands, review each proposed action, then approve it.
 
 1. As the implementation runs, confirm that GitHub Copilot is making changes consistent with the request, including:
 
@@ -849,9 +842,7 @@ Ask GitHub Copilot to register the semantic model as a Rayfin connector in the e
 
 ## Task 3: Add the dashboard with GitHub Copilot
 
-1. In the same session, select **Interactive** (mode) in the chat input area to switch to **Plan** mode.
-
-1. Enter the following implementation request, then press **Enter**:
+1. In the same session, enter the following implementation request, then press **Enter**:
 
     ```text
     Add an operational dashboard to the existing Field Services app, reachable from the manager view. Use the registered fieldservicesmodel Semantic Model connector.
@@ -869,9 +860,7 @@ Ask GitHub Copilot to register the semantic model as a Rayfin connector in the e
     Reuse the app's components and styling. Keep the existing Fabric sign-in flow and do not add credentials, access tokens, or direct Execute Queries REST API calls. Generate the changes for review; do not deploy yet.
     ```
 
-1. Once the plan is generated, review the proposed changes and the task list in the **Plan** canvas, then select **Approve and implement this plan**.
-
-1. Wait for the agent to finish. This can take several minutes.
+1. Wait for the agent to finish. This can take several minutes. When GitHub Copilot asks for permission to edit files or run commands, review each proposed action, then approve it.
 
 1. Select the **Changes** button above the chat input area and review the changed files. Confirm that:
 

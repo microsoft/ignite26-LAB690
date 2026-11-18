@@ -11,9 +11,6 @@ In this exercise, use the GitHub Copilot app to add a schema-backed comments fea
 
 1. In the left panel of the GitHub Copilot app, hover over the **field-services-app** project and select **+** (**New session**).
 2. Below the chat input area, make sure that **Current checkout** is selected rather than **New worktree**.
-3. In the chat input area, select **Interactive** to switch to **Plan** mode. Plan mode lets you review and approve multiple changes before they are applied.
-
-    ![Plan mode option in the GitHub Copilot app](../img/github-copilot-switch-to-plan-mode.png)
 
 ## Task 3: Generate the comments feature
 
@@ -28,7 +25,7 @@ In this exercise, use the GitHub Copilot app to add a schema-backed comments fea
     Preserve the existing RayfinClient.create composition with browserSession and dataService. Select every field the comments UI needs, convert wire dates at the service boundary, and do not treat partial mutation responses as complete records.
     ```
 
-3. Review the proposed changes and the task list in the **Plan** canvas, then select **Approve and implement this plan**. Copilot switches to **Autopilot** mode and carries out the plan without asking further questions.
+3. Wait for Copilot to finish. When it asks for permission to edit files or run commands, review each proposed action, then approve it.
 4. Review the generated changes. Look for:
 
     - A new comment entity registered in the Rayfin schema.
