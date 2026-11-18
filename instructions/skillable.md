@@ -14,7 +14,7 @@ In the virtual machine, sign into Windows using the following credentials:
 
 ## Lab Overview
 
-This lab demonstrates how to go from zero to production with a full-stack enterprise app using Fabric Apps, the Rayfin SDK, and GitHub Copilot CLI. It shows how a managed backend in Microsoft Fabric can provide database, authentication, hosting, schema management, and deployment so builders can focus on product features instead of infrastructure plumbing.
+This lab demonstrates how to go from zero to production with a full-stack enterprise app using Fabric Apps, the Rayfin SDK, and the GitHub Copilot app. It shows how a managed backend in Microsoft Fabric can provide database, authentication, hosting, schema management, and deployment so builders can focus on product features instead of infrastructure plumbing.
 
 The scenario centers on Contoso DIY, a home-improvement retailer expanding into home services. After customers choose products for projects like painting, hanging, or repairs, Contoso wants to connect them with qualified service pros who can complete the work in the field. To support this new business line, Contoso needs a work-order management app that allows:
 
@@ -28,7 +28,7 @@ Through the exercises, you'll explore how Contoso DIY:
 
 - Bootstraps a production-ready field-services app from a template and uses Fabric Apps and Rayfin SDK to model service pros, work orders, authentication, data, and hosting declaratively
 - Provisions a managed Fabric backend with a SQL database, authentication, and static hosting with a single command and no cloud configuration
-- Uses GitHub Copilot CLI and the Rayfin agent skill to add features across the schema and user interface, applying schema changes locally and in production without hand-writing migrations
+- Uses the GitHub Copilot app and the Rayfin agent skill to add features across the schema and user interface, applying schema changes locally and in production without hand-writing migrations
 - Seeds the deployed app with realistic data, builds a Microsoft Fabric semantic model over it, and uses the Rayfin Semantic Model connector to bring insights back into an in-app dashboard
 
 You'll walk in the Contoso DIY team's shoes to build, ship, evolve, and analyze a real enterprise app. The exercises are designed to be completed in order because each step builds on the app, data model, deployment, and resources created in the previous exercises, so make sure you complete each exercise before moving on to the next one.
@@ -48,7 +48,7 @@ This lab uses a pre-configured virtual machine with all necessary tools installe
 - PowerShell 7
 - Git
 - Visual Studio Code
-- GitHub Copilot CLI
+- GitHub Copilot app
 
 ## Task 1: Sign in to Microsoft Fabric and create a workspace
 
@@ -91,42 +91,31 @@ In this exercise, you will sign in to GitHub through Contoso DIY's enterprise SS
 
 1. After a successful sign-in, you will be redirected to the GitHub homepage. **Keep this browser tab open** as you will need this active session for the next steps.
 
-## Task 3: Sign in to GitHub Copilot in the terminal
+## Task 3: Sign in to the GitHub Copilot app
 
-1. In the virtual machine, from the taskbar, select **Windows Terminal** to open a new terminal window.
+The GitHub Copilot app is the desktop app you'll use in this lab to work with GitHub Copilot: it runs the commands, writes the code, and shows you each change.
 
-1. In the terminal, start the Copilot CLI by running: `copilot`.
+1. In the virtual machine, open the **GitHub Copilot app** from the taskbar.
 
-1. When prompted with "Do you trust the files in this folder?", select **Yes, and remember this folder for future sessions** by navigating with the arrow keys and pressing Enter.
+1. In the GitHub Copilot app, select **Sign in to GitHub**. This will copy the device code to your clipboard and open a browser window for authentication.
 
-1. In the Copilot CLI, run `/update` to update to the latest version.
+1. If prompted with a dialog asking for permission to access your GitHub account, select **Authorize GitHub** to continue.
 
-1. Run the following command in the Copilot CLI to start the login process: `/login`.
+1. In the browser window that opens, use the active GitHub SSO session from Task 2 to complete the sign-in if asked, then paste your device code when prompted with **Ctrl+V** and press **Enter**.
 
-1. When prompted to choose a sign-in method, select **Github.com**.
-
-1. Press any key to open the browser and sign in using the SSO session from Task 2. The device code is copied to your clipboard automatically, so paste it into the browser when asked.
-
-1. After a successful sign-in, return to the terminal and confirm that you see "Signed in successfully" in the output.
-
-1. Exit the Copilot CLI by running: `/exit`. You will start it again in the next exercise when you use it to generate code.
-
-1. *(Optional)* In the virtual machine, select **GitHub Copilot App** on the taskbar to open it, then follow the app's sign-in instructions.
+1. Return to the GitHub Copilot app. When asked to start with a local folder or a repository, select **Continue** and confirm that it is ready for you to start a conversation.
 
 ---
 
 ## Verify Your Setup
 
-Navigate back to the Windows Terminal and run the following commands to verify that your environment is set up correctly:
+1. In the GitHub Copilot app, start a new chat and enter the following prompt, then press **Enter**:
 
-```shell
-node --version
-npm --version
-git --version
-copilot --version
-```
+    ```text
+    Check that Node.js, npm, Git, and PowerShell 7 are installed on this machine and report their versions. Don't install or change anything.
+    ```
 
-Confirm that Node.js reports version 24 and the other commands report installed versions.
+1. Confirm that Node.js reports version 24 and the other tools report installed versions.
 
 > [!Note]
 > This lab uses Rayfin **^2.0.0**. The create command in Exercise 2 downloads it, so you don't need a global Rayfin installation.
@@ -137,50 +126,73 @@ Select **Next →** to start the second exercise.
 
 # Exercise 2: Bootstrap App from Template
 
-In this exercise, you'll create a new Rayfin project from the **Field Services** template.
+In this exercise, you'll ask the GitHub Copilot app to create a new Rayfin project from the **Field Services** template, save it to a Git repository, and open it as a project.
 
 The template handles the setup for you, so you can focus on the lab.
+
 > [!TIP]
 > In this lab environment, the template is available locally at **C:\LabFiles\template\field-services-app**. The **rayfin** CLI knows how to find it by name.
 
 ## Task 1: Bootstrap a new Rayfin project from the Field Services template
 
-1. From the open Windows Terminal, enter the following command then press **Enter** to bootstrap a new Rayfin project from the Field Services template.
+1. In the GitHub Copilot app, start a new chat.
 
-    ```shell
+1. Enter the following prompt, then press **Enter**:
+
+    ```text
+    Create a new Rayfin app in my user profile folder by running this command:
     npm create -y @microsoft/rayfin@^2.0.0 -- --project-name field-services-app --template "C:/LabFiles/template/field-services-app" --workspace "field-services-@lab.LabInstance.Id"
+    When it's ready, initialize a Git repository in the field-services-app folder and commit all files with the message "Initial commit - bootstrap from template". Then open the folder as a project in the GitHub Copilot app.
     ```
 
-    The CLI will then:
-    - Create a new folder called **field-services-app** in your current directory.
-    - Copy the template files into a new **field-services-app** folder.
+    > [!TIP]
+    > When GitHub Copilot asks for permission to run a command or edit files, review the proposed action, then approve it.
+
+1. Watch the agent work. The Rayfin create command will:
+
+    - Create a new folder called **field-services-app** in your user profile folder.
+    - Copy the template files into the new **field-services-app** folder.
     - Record your Fabric workspace display name for later CLI commands.
     - Run `npm install` in the new project folder to pull dependencies (this can take a couple of minutes on first run).
 
+    Then the agent initializes a Git repository, commits the starter code, and adds the **field-services-app** folder as a project in the GitHub Copilot app.
+
     > [!Note]
-    > This lab uses Rayfin **^2.0.0**. Use `@^2.0.0` in every `npm create` command and `^2.0.0` for Rayfin package additions, and keep Rayfin packages version-matched. Inside the generated project, use `npx rayfin` to run the installed CLI.
+    > This lab uses Rayfin **^2.0.0**. The prompts in this lab use `@^2.0.0` in every `npm create` command and `^2.0.0` for Rayfin package additions, and keep Rayfin packages version-matched. Inside the generated project, `npx rayfin` runs the installed CLI.
 
     The create command does not provision the Fabric backend. You will do that with `npx rayfin dev` in Exercise 4.
 
-1. While the install is running, open the **data** folder at **C:\LabFiles\template\field-services-app** to see the original prompt and dataset used to generate this template. This will give you a better understanding of how the app was built and ideas on how to customize it later in the lab.
+1. While the agent is working, open File Explorer and go to the **data** folder at **C:\LabFiles\template\field-services-app** to see the original prompt and dataset used to generate this template. This will give you a better understanding of how the app was built and ideas on how to customize it later in the lab.
 
-## Task 2: Explore the generated project and make your first commit
+1. Confirm that the agent reports that the project was created and committed, and that the **field-services-app** project appears in the left panel of the GitHub Copilot app.
 
-In this task, you will inspect the generated project, initialize a Git repository, and make your first commit. This is important for GitHub Copilot CLI in later exercises, as it will show you clean diffs and what it will be changing when you ask it to generate code.
+    > [!Note]
+    > The initial commit matters: in later exercises, you review each change the agent makes as a clean diff against this starting point.
 
-1. Open the **field-services-app** folder in Visual Studio Code by running the following command in the terminal:
+## Task 2: Open a session in the project
 
-    ```shell
-    code field-services-app
+In this task, you open a working session in the **field-services-app** project and ask GitHub Copilot for a first look at the generated project.
+
+1. In the left panel of the GitHub Copilot app, hover over the **field-services-app** project and select **+** (**New session**).
+
+    !IMAGE[github-copilot-new-session.png](instructions345417/github-copilot-new-session.png)
+
+1. Below the chat input area, select **New worktree** and change it to **Current checkout**.
+
+    !IMAGE[github-copilot-new-worktree.png](instructions345417/github-copilot-new-worktree.png)
+
+    > [!TIP]
+    > By default, the GitHub Copilot app creates a new worktree for each session, so you can work on several features at once. In this lab, you work on one feature at a time, and the deployment details Rayfin saves in your project folder aren't committed, so always work in the current checkout.
+
+1. Enter the following prompt, then press **Enter**:
+
+    ```text
+    Read AGENTS.md and give me a short overview of this project's structure and main folders. Don't change any code.
     ```
 
-1. If Visual Studio Code prompts you to sign in, select **GitHub** and use your lab GitHub account. If the browser asks permission to return to Visual Studio Code, allow it.
+1. If a confirmation dialog asks whether you trust the repository, select **A. Always trust repository** to continue.
 
-1. If a dialog asks whether you trust the authors, select **Yes, I trust the authors**. If a **Restricted Mode** banner appears instead, select **Manage**, then trust this project folder to enable editing and running the app.
-
-1. In the Visual Studio Code Explorer, expand the **field-services-app** folder that was created by the bootstrap command.
-
-1. Review the project structure. It should look something like this:
+1. Read the overview. The project structure should look something like this:
 
     - **packages/data/**: Rayfin data model (entity classes and schema)
     - **packages/shared/**: Browser-safe record contracts shared by the frontend
@@ -189,25 +201,19 @@ In this task, you will inspect the generated project, initialize a Git repositor
     - **data/**: Seed data and **the original prompt + dataset used to generate this template** (worth a look if you're curious how it was built)
     - **package.json**: Declares the npm workspaces and root scripts such as **build** and **dev**.
 
-1. Open the terminal in Visual Studio Code by right-clicking in an empty space of the editor area's tabs bar and select **New Terminal** to open a terminal pane. Alternatively, you can select **View > Terminal** from the top menu.
+    > [!Note]
+    > The agent's wording varies. If something in the overview isn't clear, ask a follow-up question in the same session.
 
-1. In the Visual Studio Code terminal, run this command to initialize a new Git repository:
+1. In the top-right corner of the GitHub Copilot app, select the **Toggle panel** button.
 
-    ```shell
-    git init
-    ```
+    !IMAGE[github-copilot-toggle-panel.png](instructions345417/github-copilot-toggle-panel.png)
 
-1. Next, add all the files to the staging area with this command:
+1. In the right panel, select **+** (**Open in panel**), then select **Files**. You'll use this panel to browse the project files in the next exercise.
 
-    ```shell
-    git add .
-    ```
+    !IMAGE[github-copilot-files-panel.png](instructions345417/github-copilot-files-panel.png)
 
-1. Finally, make your first commit with this command:
-
-    ```shell
-    git commit -m "Initial commit - bootstrap from template"
-    ```
+    > [!TIP]
+    > To read the code more comfortably, you can alternatively select **Open in VS Code** in the session header. It opens the **field-services-app** project in Visual Studio Code. If Visual Studio Code asks whether you trust the authors, select **Yes, I trust the authors**.
 
 Continue with **Next →** to explore the codebase.
 
@@ -225,11 +231,11 @@ You will look at:
 - the frontend files you may use later
 
 > [!Tip]
-> Skim the files. You do not need to understand every line yet.
+> Skim the files. You do not need to understand every line yet. Browse them in the **Files** panel you opened in Exercise 2. If you closed it, select the **Toggle panel** button in the top-right corner of the GitHub Copilot app, select **+** (**Open in panel**), then select **Files**.
 
 ## Task 1: Explore the project structure
 
-1. In Visual Studio Code, expand the **field-services-app** folder.
+1. In the **Files** panel of the GitHub Copilot app, review the files and folders of the **field-services-app** project.
 
 1. Notice these files and folders:
 
@@ -349,26 +355,22 @@ Then you will sign in, create a Service Pro profile, complete a work order, and 
 
 The **rayfin dev** command provisions a missing managed backend (database, auth, data API) in your Fabric workspace, applies your schema, and starts the frontend locally. It does not publish the static frontend; you will do that in Exercise 5.
 
-1. Use the VS Code terminal from the previous exercise. It should already be in the **field-services-app** folder.
+1. In the left panel of the GitHub Copilot app, select the session you created in Exercise 2 under the **field-services-app** project.
 
-1. In this lab VM, enable the token-storage fallback in the current PowerShell terminal:
+1. Enter the following prompt, then press **Enter**:
 
-    ```powershell
-    $env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"
+    ```text
+    Open a terminal in the canvas view so I can watch its output. In that terminal, set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true", then start the Rayfin development session by running:
+    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
+    Leave it running, and give me the local frontend URL when it's ready.
     ```
 
     > [!IMPORTANT]
-    > This permits plaintext token storage when the VM's OS keychain is unavailable. Use it only in the lab VM, and do not share the stored tokens. Repeat this step if you open a new PowerShell terminal.
+    > The `RAYFIN_ENCRYPTION_FALLBACK_ENABLED` variable permits plaintext token storage, because the lab VM's OS keychain is unavailable. Use it only in the lab VM, and do not share the stored tokens. The prompts in this lab that run Rayfin commands set it for you.
 
-1. Start the development session by running:
+1. The agent opens a **Terminal** panel on the right and runs the command in it. On the first run, the CLI will:
 
-    ```shell
-    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
-    ```
-
-1. On the first run, the CLI will:
-
-    - Open a browser to sign you in to Microsoft Entra. Authentication will be automatic since you already have an active SSO session from Exercise 1.
+    - Open a browser to sign you in to Microsoft Entra. Authentication will be automatic since you already have an active SSO session from Exercise 1. If you're asked to pick an account, select **@lab.CloudPortalCredential(User1).Username**.
     - **Create a Fabric App item** in the workspace you created in Exercise 1.
     - **Provision a managed SQL database** for your data model.
     - **Apply your schema** to that database.
@@ -376,21 +378,21 @@ The **rayfin dev** command provisions a missing managed backend (database, auth,
     - **Wire your frontend** to the new backend by writing the connection details and key into *packages/frontend/.env.local*.
     - **Start the local frontend** using the template's Vite development server.
 
-1. Watch the terminal for progress on each step. The first run takes a couple of minutes.
+1. Watch the terminal panel for progress on each step. The first run takes a couple of minutes.
 
-1. Wait for the local frontend URL to appear and leave the command running.
+1. Wait for the agent to report the local frontend URL, and leave the development session running in the terminal panel.
 
 > [!TIP]
 > The CLI saves the deployment details to **rayfin/.deployments.json** so subsequent **rayfin dev** and **rayfin up** runs reuse the same backend. Keep the generated environment files private and don't commit credentials or keys.
 
 > [!Note]
-> `npx rayfin` uses the project's installed CLI. Check that `npx rayfin --version` reports the locked 2.x version. If an older version appears, ask your lab instructor for help: the template's Rayfin packages must be updated together, and updating a global CLI alone doesn't change the project's version.
+> `npx rayfin` uses the project's installed CLI, and `npx rayfin --version` should report the locked 2.x version. If an older version appears, ask your lab instructor for help: the template's Rayfin packages must be updated together, and updating a global CLI alone doesn't change the project's version.
 
 ## Task 2: Open the local frontend
 
 The frontend is the React app that users interact with. **rayfin dev** has already started it; you do not need to start a separate development server.
 
-1. Hold **Ctrl** and select the local frontend URL shown in the Visual Studio Code terminal, usually `http://localhost:5173`, to open it in Visual Studio Code's browser. Alternatively, copy and paste the URL into a browser window.
+1. In Microsoft Edge, open a new tab and go to the local frontend URL reported by the agent, usually `http://localhost:5173`.
 
 1. The Vite local-development plugin uses the Rayfin CLI's Microsoft sign-in to establish the app session automatically, so you don't need a separate email and password. If the CLI prompts you to sign in, use the same Microsoft account you used for Fabric:
 
@@ -400,7 +402,7 @@ The frontend is the React app that users interact with. **rayfin dev** has alrea
 1. Confirm that the app opens.
 
     > [!Tip]
-    > If automatic sign-in fails, review the error displayed in the app. Check that **rayfin/rayfin.yml** contains `externalEntraExchange: true` under **services > auth > fabric**, then restart `rayfin dev`.
+    > If automatic sign-in fails, review the error displayed in the app. Check that **rayfin/rayfin.yml** contains `externalEntraExchange: true` under **services > auth > fabric**, then ask Copilot to restart the development session in the terminal panel.
 
 ## Task 3: Sign up as a Service Pro
 
@@ -440,7 +442,7 @@ The same app also includes a manager view.
 
 1. Confirm that the assigned work order appears for the Service Pro.
 
-1. Back in the Visual Studio Code terminal, stop the Vite dev server by pressing **Ctrl+C**.
+1. In the GitHub Copilot app, select the **Terminal** panel running the development session, then press **Ctrl+C** to stop it.
 
 Continue with **Next →** to deploy the app to production.
 
@@ -450,7 +452,7 @@ Continue with **Next →** to deploy the app to production.
 
 In Exercise 4, you ran **npx rayfin dev** to provision the Rayfin backend in Microsoft Fabric and run the frontend locally. That command did not publish the static frontend.
 
-In this exercise, you will run **rayfin up** to build and publish the frontend to Microsoft Fabric's managed static hosting, apply any pending backend changes, and verify the live app using the same workspace and backend.
+In this exercise, you will ask GitHub Copilot to run **rayfin up** to build and publish the frontend to Microsoft Fabric's managed static hosting, apply any pending backend changes, and verify the live app using the same workspace and backend.
 
 You will:
 
@@ -461,20 +463,22 @@ You will:
 
 ## Task 1: Deploy and open the live app
 
-1. In the **field-services-app** terminal, run:
+1. In the **field-services-app** session, enter the following prompt, then press **Enter**:
 
-    ```shell
+    ```text
+    Deploy this app to my Fabric workspace by running this command, without running prior checks or a dry run:
     npx rayfin up --workspace "field-services-@lab.LabInstance.Id"
+    Set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true" for Rayfin commands. Return the static hosting URL of the deployed app when done.
     ```
 
-1. Wait for the CLI to build and publish the frontend and apply any pending backend changes.
+1. Wait for the agent to report that the CLI built and published the frontend and applied any pending backend changes.
 
-1. In the command output, find the **static hosting URL** printed by the CLI.
+1. In the agent's response, find the **static hosting URL** printed by the CLI.
 
     > [!TIP]
-    > If you missed the hosting URL, run `npx rayfin up status` from the **field-services-app** folder to print the current deployment details.
+    > If you missed the hosting URL, ask Copilot to run `npx rayfin up status` to print the current deployment details.
 
-1. Open the hosting URL in a new browser tab. The app shows the same sign-in experience as your local frontend, because both use the same Fabric backend.
+1. Open the hosting URL in a new Microsoft Edge tab. The app shows the same sign-in experience as your local frontend, because both use the same Fabric backend.
 
 1. If the sign-in page is shown, select **Sign in with Microsoft** and accept the Microsoft Fabric credentials prompt if it appears.
 
@@ -559,14 +563,14 @@ Continue with **Next →** to add a feature with GitHub Copilot.
 
 # Exercise 7: Add a feature with GitHub Copilot
 
-In the previous exercises, you deployed the Field Services app to Microsoft Fabric and seeded it with sample data. In this exercise, use GitHub Copilot CLI or GitHub Copilot App to implement a schema-backed comments feature for work orders.
+In the previous exercises, you deployed the Field Services app to Microsoft Fabric and seeded it with sample data. In this exercise, use the GitHub Copilot app to implement a schema-backed comments feature for work orders.
 
 The comments feature gives each work order a conversation thread where service pros and managers can discuss job details over time. Implementing this feature requires changes across the Rayfin data model, permissions, typed data access, and React user interface.
 
 By completing this exercise, you will:
 
-- Review the project-specific agent instructions that guide GitHub Copilot CLI.
-- Launch GitHub Copilot CLI from the Field Services app project.
+- Review the project-specific agent instructions that guide GitHub Copilot.
+- Start a GitHub Copilot session in the Field Services app project.
 - Generate a Rayfin-backed **Comment** entity and comments user interface.
 - Review the generated schema, permission, data access, and frontend changes.
 - Apply the schema update to the Microsoft Fabric backend.
@@ -574,55 +578,38 @@ By completing this exercise, you will:
 
 ## Task 1: Review the project agent instructions
 
-The app template includes agent instructions that help GitHub Copilot CLI generate Rayfin code that follows the project's conventions.
+The app template includes agent instructions that help GitHub Copilot generate Rayfin code that follows the project's conventions.
 
 The Rayfin agent skill provides domain guidance for entities, decorators, permissions, schema updates, and typed client usage. The project-level **AGENTS.md** file adds repository-specific context, including architecture notes, important files, and implementation conventions.
 
-1. In Visual Studio Code, Open **AGENTS.md** at the project root.
+1. In the **Files** panel of the GitHub Copilot app, open **AGENTS.md** at the project root.
 
-1. Review the guidance so you understand the context GitHub Copilot CLI will use while editing this project.
+1. Review the guidance so you understand the context GitHub Copilot will use while editing this project.
 
 1. Open **package.json** and confirm that **@microsoft/rayfin-mcp** is listed in the development dependencies.
 
     > [!Tip]
     > The template installs the Rayfin agent skill automatically. If you start from a blank project in the future, install the agent files by running `npx rayfin init ai-files install` from the project folder.
 
-## Task 2: Launch GitHub Copilot CLI
+## Task 2: Start a GitHub Copilot session
 
-> [!NOTE]
-> If you prefer, open the existing **field-services-app** folder in GitHub Copilot App and use the same prompts and review steps. You do not need to run the CLI as well.
+Start a new session in the app project so GitHub Copilot can read the project files, agent instructions, and Rayfin configuration with a fresh context.
 
-Start GitHub Copilot CLI from the app project folder so it can read the project files, agent instructions, and Rayfin configuration.
+1. In the left panel of the GitHub Copilot app, hover over the **field-services-app** project and select **+** (**New session**).
 
-1. Open a terminal in Visual Studio Code.
+1. Below the chat input area, make sure that **Current checkout** is selected. If it shows **New worktree**, select it and change it to **Current checkout**.
 
-1. Launch GitHub Copilot CLI:
+1. In the chat input area, select **Interactive** (mode) to switch to **Plan** mode. Since this feature involves multiple changes to the app, Plan mode helps you review and approve them before they are applied.
 
-    ```shell
-    copilot
-    ```
-
-1. Use the model and reasoning settings available for your account. When GitHub Copilot CLI asks to edit files or run commands, review each proposed action before approving it.
-
-    > [!TIP]
-    > *(Optional)* In this trusted lab project, run `/yolo` to let the CLI act without asking for each tool permission. This allows file changes and command execution without individual approval; leave it off if you want to review each action.
+    !IMAGE[github-copilot-switch-to-plan-mode.png](instructions345417/github-copilot-switch-to-plan-mode.png)
 
 ## Task 3: Generate the comments feature
 
-Use GitHub Copilot CLI to generate the comments feature without applying the backend schema change yet.
+Use GitHub Copilot to generate the comments feature without applying the backend schema change yet.
 
-1. In a separate project terminal, start the existing app:
+1. Make sure that the development session from Exercise 4 isn't running. If a **Terminal** panel is still running `npx rayfin dev`, select it and press **Ctrl+C**. A running development session can apply schema changes to the backend as soon as Copilot edits them; stopping it lets you review backend changes before applying them.
 
-    ```shell
-    npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
-    ```
-
-    > [!NOTE]
-    > In a new PowerShell terminal on the lab VM, first run `$env:RAYFIN_ENCRYPTION_FALLBACK_ENABLED = "true"`.
-
-1. Confirm that the app opens, then stop the development session with **Ctrl+C** before Copilot changes the schema. This lets you review backend changes before applying them.
-
-1. In Copilot, paste the following implementation request:
+1. In the new session, enter the following implementation request, then press **Enter**:
 
     ```text
     Implement a comments feature for work orders. Comments should provide a history of interventions so service pros and the manager can communicate about a work order. Each comment must include an id, userId, createdAt, workOrderId, and content. Keep the comments section collapsed by default. Let the attendee add comments from the assigned service-pro experience and reply from the manager experience using the same signed-in account. These are switchable demonstration views, not independently authorized roles. Preserve authenticated backend access; do not treat the view switch as authorization or add a second account requirement. Generate the code, but do not apply the backend schema change yet.
@@ -632,9 +619,12 @@ Use GitHub Copilot CLI to generate the comments feature without applying the bac
     Preserve the existing RayfinClient.create composition with browserSession and dataService. Select every field the comments UI needs, convert wire dates at the service boundary, and do not treat partial mutation responses as complete records.
     ```
 
-1. Review the plan and allow GitHub Copilot CLI to apply the code changes.
+1. Once the plan is generated, review the proposed changes and the task list in the **Plan** canvas on the right panel, then select **Approve and implement this plan** to start the implementation.
 
-1. As the implementation runs, confirm that GitHub Copilot CLI is making changes consistent with the request, including:
+    > [!Note]
+    > When you approve the plan, GitHub Copilot automatically switches to **Autopilot** mode to implement the changes. In this mode, it doesn't ask you questions and carries out the tasks as specified until the work is complete.
+
+1. As the implementation runs, confirm that GitHub Copilot is making changes consistent with the request, including:
 
     - A new **WorkOrderComment** entity under **packages/data/src/**
     - An update to **packages/data/src/schema.ts** that registers the new entity
@@ -651,17 +641,15 @@ Use GitHub Copilot CLI to generate the comments feature without applying the bac
 
 ## Task 4: Review the generated implementation
 
-Before applying backend changes, review the files generated by GitHub Copilot CLI.
+Before applying backend changes, review the files generated by GitHub Copilot.
 
-1. Open the Visual Studio Code Source Control view.
+1. Select the **Changes** button above the chat input area to see the files that the agent modified.
 
-    !IMAGE[vscode-source-control.png](instructions345417/vscode-source-control.png)
+    !IMAGE[github-copilot-changes-button.png](instructions345417/github-copilot-changes-button.png)
 
 1. Review each changed file.
 
-1. Confirm that the implementation includes a comment entity, schema registration, shared contract, data access updates, and user interface updates.
-
-1. If you prefer the terminal, run `git status` or `git diff` from the **field-services-app** folder to inspect the same changes. Expected changes include:
+1. Confirm that the implementation includes a comment entity, schema registration, shared contract, data access updates, and user interface updates. Expected changes include:
 
     - A new file under **packages/data/src/**, such as **WorkOrderComment.ts**
     - An update to **packages/data/src/schema.ts**
@@ -676,10 +664,11 @@ Before applying backend changes, review the files generated by GitHub Copilot CL
 
 After reviewing the implementation, ask Copilot to apply the schema and publish the app in one deployment:
 
-1. Enter the following prompt:
+1. In the same session, enter the following prompt, then press **Enter**:
 
     ```text
     Apply the reviewed changes to this app's existing Fabric deployment with npx rayfin up. This command applies pending schema changes and publishes the frontend, so do not run a separate database apply command. Do not drop or rename existing tables or columns, reset data, or force destructive changes. If a destructive change is reported, stop and show me the details. Confirm that deployment succeeds and report any errors.
+    Set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true" for Rayfin commands.
     ```
 
 1. Confirm that deployment completes successfully and creates the comments table, such as **WorkOrderComments**.
@@ -690,13 +679,15 @@ After reviewing the implementation, ask Copilot to apply the schema and publish 
 
 Test the comments feature from both the local development app and the hosted app.
 
-1. In the separate project terminal, start the local development session:
+1. In the same session, enter the following prompt, then press **Enter**:
 
-    ```shell
+    ```text
+    Open a terminal in the canvas view so I can watch its output. In that terminal, set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true", then start the Rayfin development session by running:
     npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
+    Leave it running, and give me the local frontend URL when it's ready.
     ```
 
-1. Open the local app at the Vite dev server URL, such as `http://localhost:5173`.
+1. In Microsoft Edge, open the local app at the URL reported by the agent, such as `http://localhost:5173`.
 
 1. Open a work order assigned to your Service Pro profile.
 
@@ -718,9 +709,11 @@ Test the comments feature from both the local development app and the hosted app
 
 1. *(Optional)* Add comments to several work orders for richer analysis in Exercise 8.
 
+1. In the GitHub Copilot app, select the **Terminal** panel running the development session, then press **Ctrl+C** to stop it.
+
 ## Task 7: Refine the implementation if needed
 
-If the feature does not work as expected, use GitHub Copilot CLI to make a targeted fix. Include the observed behavior, error message, or screenshot details in your follow-up prompt.
+If the feature does not work as expected, ask GitHub Copilot in the same session to make a targeted fix. Include the observed behavior, error message, or screenshot details in your follow-up prompt.
 
 Example follow-up prompts:
 
@@ -736,7 +729,7 @@ This error appears when I post a comment: <paste the error message>. Please fix 
 The manager view cannot see comments on assigned work orders. Please review the data access and fix the issue.
 ```
 
-After GitHub Copilot CLI applies a fix, review the proposed changes, then repeat the relevant validation steps from Task 5 and Task 6.
+After GitHub Copilot applies a fix, review the proposed changes, then repeat the relevant validation steps from Task 5 and Task 6.
 
 You have completed the feature implementation and validation workflow for the Field Services app.
 
@@ -748,13 +741,13 @@ Continue with **Next →** to add a semantic-model dashboard to the app.
 
 In Exercise 6, you seeded the database with a realistic production dataset, then added comments in Exercise 7. In this exercise, you will turn that operational data into insights and bring them back into the app.
 
-The Microsoft Fabric SQL Database provisioned by Rayfin is a first-class citizen in your Fabric workspace. You will build a Power BI semantic model over it, then use Rayfin's **Semantic Model connector** and GitHub Copilot CLI to add an operational dashboard to the existing Field Services app. The dashboard queries the semantic model through the connector rather than reading the operational tables directly.
+The Microsoft Fabric SQL Database provisioned by Rayfin is a first-class citizen in your Fabric workspace. You will build a Power BI semantic model over it, then use Rayfin's **Semantic Model connector** and the GitHub Copilot app to add an operational dashboard to the existing Field Services app. The dashboard queries the semantic model through the connector rather than reading the operational tables directly.
 
 By completing this exercise, you will:
 
 - Build a semantic model over the service pro, work order, and comments tables.
 - Register the semantic model as a Rayfin connector in the app.
-- Use GitHub Copilot CLI to add a dashboard that queries the semantic model.
+- Use GitHub Copilot to add a dashboard that queries the semantic model.
 - Deploy the app and verify the dashboard locally and in the hosted app.
 
 ## Task 1: Build a Semantic model
@@ -816,59 +809,49 @@ A semantic model gives a clean, well-described view of your data - including tab
     !IMAGE[fabric-add-table-descriptions.png](instructions345417/fabric-add-table-descriptions.png)
 
     > [!Tip]
-    > Adding descriptions is optional but highly recommended. Clear names and descriptions help GitHub Copilot CLI and other tools understand your data and write accurate queries.
+    > Adding descriptions is optional but highly recommended. Clear names and descriptions help GitHub Copilot and other tools understand your data and write accurate queries.
 
 1. Confirm that the model can query the seeded data. Refresh it if its storage mode requires a refresh.
 
-1. Record the IDs the connector needs. With the **FieldServices** semantic model open, copy the URL from the browser address bar. It should look like `https://app.fabric.microsoft.com/groups/<workspace-id>/datasets/<semantic-model-item-id>/...`. Note the **workspace ID** and the **semantic model item ID**, for example in Notepad.
+1. With the **FieldServices** semantic model open, look at the URL in the browser address bar. It should look like `https://app.fabric.microsoft.com/groups/<workspace-id>/datasets/<semantic-model-item-id>/...`, and contains the **workspace ID** and the **semantic model item ID** the connector needs. Keep this tab open; you'll copy the URL in the next task.
 
 ## Task 2: Connect the semantic model to the app
 
-Register the semantic model as a Rayfin connector in the existing **field-services-app** project.
+Ask GitHub Copilot to register the semantic model as a Rayfin connector in the existing **field-services-app** project, and to read the model's metadata before it writes any query.
 
-1. Return to a terminal in Visual Studio Code in the **field-services-app** folder. Do not create a second app or replace the Field Services template.
+1. In the GitHub Copilot app, open a new session in the **field-services-app** project, and make sure it uses **Current checkout**.
 
-1. Add a connector named **fieldservicesmodel**. Replace `<workspace-id>` and `<semantic-model-item-id>` with the values you recorded in Task 1:
+1. Enter the following prompt, but don't press **Enter** yet:
 
-    ```shell
+    ```text
+    Add a Rayfin connector for my FieldServices semantic model to this app by running:
     npx rayfin connector add --type fabric-semanticmodel --workspace-id "<workspace-id>" --item-id "<semantic-model-item-id>" --name fieldservicesmodel --operations executeQuery
+    Take the workspace ID and semantic model item ID from the URL below. Then run the version-matched package installation command printed by the CLI, and inspect the model with npx rayfin connector inspect --name fieldservicesmodel. If metadata inspection fails with a DAX query error, inspect each table with npx rayfin connector inspect --name fieldservicesmodel --entity "<table-name>" --rows 1.
+    List the model's tables, columns, relationships, and measures. Set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true" for Rayfin commands. Don't change the app code yet.
+    Semantic model URL: <replace with your semantic model URL>
     ```
 
-1. Run the version-matched package installation command printed by the CLI.
+1. Go back to the Microsoft Fabric tab with the semantic model open, copy the URL from the address bar, and paste it in place of the placeholder at the end of the prompt. Press **Enter** to continue.
+
+1. Watch the agent work. It adds the **fieldservicesmodel** connector, installs the version-matched connector packages, and inspects the model.
 
     > [!Important]
     > Keep connector and SDK packages on the same release within **^2.0.0**. Do not substitute moving tags or prereleases.
 
-1. Open **rayfin/rayfin.yml** and review the new connector entry. Confirm that it points to your semantic model and uses delegated authentication: queries run as the signed-in user, who must have Build and Read permissions on the model.
+1. Read the agent's summary. It should list the **ServicePros**, **WorkOrders**, and **WorkOrderComments** tables with their actual column names, including the columns you renamed in Task 1.
+
+1. In the **Files** panel, open **rayfin/rayfin.yml** and review the new connector entry. Confirm that it points to your semantic model and uses delegated authentication: queries run as the signed-in user, who must have Build and Read permissions on the model.
 
 1. Open **rayfin/connectors/fieldservicesmodel/schema.ts** and review it. This file is generated, so keep it unchanged.
-
-1. Inspect the model before writing any queries:
-
-    ```shell
-    npx rayfin connector inspect --name fieldservicesmodel
-    ```
-
-    If metadata inspection fails with a DAX query error, inspect each table with a bounded sample. Replace `<table-name>` with the actual name shown in the model:
-
-    ```shell
-    npx rayfin connector inspect --name fieldservicesmodel --entity "<table-name>" --rows 1
-    ```
-
-    Note the actual table, column, and measure names, including the columns you renamed in Task 1.
 
 > [!Note]
 > The connector requires the Fabric Apps workload and the **Semantic Model Execute Queries REST API** tenant setting to be enabled. If queries fail with a tenant or permission error, ask your lab instructor for help. To learn more, see the [Rayfin Semantic Model connector documentation](https://rayfin.ai/docs/connectors/semantic-models).
 
-## Task 3: Add the dashboard with Copilot CLI
+## Task 3: Add the dashboard with GitHub Copilot
 
-1. Launch GitHub Copilot CLI from the **field-services-app** folder:
+1. In the same session, select **Interactive** (mode) in the chat input area to switch to **Plan** mode.
 
-    ```shell
-    copilot
-    ```
-
-1. In the GitHub Copilot CLI prompt, paste the following implementation request:
+1. Enter the following implementation request, then press **Enter**:
 
     ```text
     Add an operational dashboard to the existing Field Services app, reachable from the manager view. Use the registered fieldservicesmodel Semantic Model connector.
@@ -886,9 +869,11 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
     Reuse the app's components and styling. Keep the existing Fabric sign-in flow and do not add credentials, access tokens, or direct Execute Queries REST API calls. Generate the changes for review; do not deploy yet.
     ```
 
-1. Review the plan and allow GitHub Copilot CLI to apply the code changes.
+1. Once the plan is generated, review the proposed changes and the task list in the **Plan** canvas, then select **Approve and implement this plan**.
 
-1. Open the Visual Studio Code Source Control view and review the changed files. Confirm that:
+1. Wait for the agent to finish. This can take several minutes.
+
+1. Select the **Changes** button above the chat input area and review the changed files. Confirm that:
 
     - The dashboard gets its data through the **fieldservicesmodel** connector.
     - The connector configuration, generated types, client options, and runtime registration all use the same **fieldservicesmodel** key.
@@ -896,21 +881,23 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 
 ## Task 4: Deploy and verify the dashboard
 
-1. Exit GitHub Copilot CLI by typing `/exit` in the prompt.
+1. In the same session, enter the following prompt, then press **Enter**:
 
-1. Deploy the connector configuration and the dashboard:
-
-    ```shell
-    npx rayfin up
+    ```text
+    Deploy the connector configuration and the dashboard to this app's existing Fabric deployment with npx rayfin up. Set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true" for Rayfin commands. Confirm that deployment succeeds and report any errors.
     ```
 
-1. Start the local development session:
+1. Wait for the agent to report a successful deployment.
 
-    ```shell
+1. Enter the following prompt to start the local development session, then press **Enter**:
+
+    ```text
+    Open a terminal in the canvas view so I can watch its output. In that terminal, set the RAYFIN_ENCRYPTION_FALLBACK_ENABLED environment variable to "true", then start the Rayfin development session by running:
     npx rayfin dev --workspace "field-services-@lab.LabInstance.Id"
+    Leave it running, and give me the local frontend URL when it's ready.
     ```
 
-1. Open the local app, select **Manager** in the app navigation bar, and open the new dashboard.
+1. In Microsoft Edge, open the local app at the URL reported by the agent, select **Manager** in the app navigation bar, and open the new dashboard.
 
 1. Confirm that the total work-order count, the breakdown by status, and the breakdown by Service Pro look consistent with the seeded data from Exercise 6, accounting for unassigned orders.
 
@@ -921,7 +908,7 @@ Register the semantic model as a Rayfin connector in the existing **field-servic
 1. Verify the row limit locally and in the hosted app with a query that exceeds it. Treat an over-limit response as an error even if the connector reports success.
 
     > [!Tip]
-    > If a query fails, check the connector's workspace and item IDs, the signed-in user's permissions on the semantic model, and the actual DAX field names. Use the connector's error category, message, and request ID to investigate, or give these details to GitHub Copilot CLI and ask for a targeted fix.
+    > If a query fails, check the connector's workspace and item IDs, the signed-in user's permissions on the semantic model, and the actual DAX field names. Use the connector's error category, message, and request ID to investigate, or paste these details in the same session and ask GitHub Copilot for a targeted fix.
 
 You have completed the loop from operational app data to a semantic model and back to an in-app dashboard.
 
@@ -936,7 +923,7 @@ In one lab session you just:
 1. Bootstrapped a full-stack Fabric App from a template.
 2. Ran it locally with **rayfin CLI**.
 3. Deployed it to Microsoft Fabric with one command.
-4. Added a real schema-backed feature using the GitHub Copilot CLI and the rayfin agent skill.
+4. Added a real schema-backed feature using the GitHub Copilot app and the rayfin agent skill.
 5. Pushed the change back to production with the same one-command deploy.
 6. Seeded production data, built a Fabric semantic model over it, and used the Rayfin Semantic Model connector to bring insights back into the app with a dashboard.
 
@@ -948,4 +935,4 @@ To keep exploring, check out:
 
 - [Rayfin documentation](https://aka.ms/rayfin)
 - [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/)
-- [GitHub Copilot CLI documentation](https://docs.github.com/copilot/how-tos/use-copilot-agents/use-copilot-in-the-cli)
+- [GitHub Copilot app documentation](https://docs.github.com/copilot/concepts/copilot-surfaces/github-copilot-app)
